@@ -411,3 +411,10 @@ tnttag.vip              # VIP機能（優先参加）
 tnttag.spectate         # 観戦モード
 tnttag.bypass.cooldown  # クールダウン無視
 ```
+
+## Active Technologies
+- Java 17 (for Minecraft 1.20.x compatibility) (001-tnt-tag-game)
+- YAML files (config.yml, arenas.yml, messages_ja_JP.yml, player stats) (001-tnt-tag-game)
+
+## Recent Changes
+- 001-tnt-tag-game: Added Java 17 (for Minecraft 1.20.x compatibility)
