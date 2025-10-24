@@ -1,0 +1,4 @@
+name: tnt_tag
+version: '1.0-SNAPSHOT'
+main: com.hacklab.minecraft.tnt_tag.Main
+api-version: '1.21'
