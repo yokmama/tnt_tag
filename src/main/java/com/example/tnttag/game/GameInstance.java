@@ -129,20 +129,28 @@ public class GameInstance {
      */
     public void start() {
         if (state != GameState.WAITING) {
+            plugin.getLogger().warning("ゲームは既に開始されています: " + arena.getName());
             return;
         }
-        
+
         state = GameState.STARTING;
-        
-        // Setup arena
-        arena.setupWorldBorder();
-        
-        // Fire start event
-        TNTTagStartEvent event = new TNTTagStartEvent(this);
-        Bukkit.getPluginManager().callEvent(event);
-        
-        // Start countdown
-        startCountdown();
+        plugin.getLogger().info("ゲーム開始: " + arena.getName() + " (プレイヤー: " + players.size() + "人)");
+
+        try {
+            // Setup arena
+            arena.setupWorldBorder();
+
+            // Fire start event
+            TNTTagStartEvent event = new TNTTagStartEvent(this);
+            Bukkit.getPluginManager().callEvent(event);
+
+            // Start countdown
+            startCountdown();
+        } catch (Exception e) {
+            plugin.getLogger().severe("ゲーム開始エラー: " + arena.getName());
+            e.printStackTrace();
+            state = GameState.WAITING;
+        }
     }
     
     /**
@@ -187,52 +195,61 @@ public class GameInstance {
             endGame(null, TNTTagEndEvent.EndReason.NO_SURVIVORS);
             return;
         }
-        
+
         Set<Player> alivePlayers = getAlivePlayers();
-        
+        plugin.getLogger().info("ラウンド " + currentRound + " 開始: 生存者 " + alivePlayers.size() + "人");
+
         // Check if only one player remains
         if (alivePlayers.size() <= 1) {
             Player winner = alivePlayers.isEmpty() ? null : alivePlayers.iterator().next();
+            plugin.getLogger().info("勝者決定: " + (winner != null ? winner.getName() : "なし"));
             endGame(winner, TNTTagEndEvent.EndReason.ALL_ROUNDS_COMPLETE);
             return;
         }
-        
-        // Select TNT holders
-        int tntHolderCount = config.calculateTNTHolders(alivePlayers.size());
-        Set<Player> tntHolders = selectRandomPlayers(alivePlayers, tntHolderCount);
-        
-        // Create round
-        activeRound = new Round(config, tntHolders);
-        
-        // Teleport players to center
-        if (plugin.getConfigManager().isSpawnTeleport()) {
+
+        try {
+            // Select TNT holders
+            int tntHolderCount = config.calculateTNTHolders(alivePlayers.size());
+            Set<Player> tntHolders = selectRandomPlayers(alivePlayers, tntHolderCount);
+            plugin.getLogger().info("TNT保持者: " + tntHolderCount + "人選出");
+
+            // Create round
+            activeRound = new Round(config, tntHolders);
+
+            // Teleport players to center
+            if (plugin.getConfigManager().isSpawnTeleport()) {
+                for (Player player : alivePlayers) {
+                    player.teleport(arena.getCenterSpawn());
+                }
+            }
+
+            // Apply effects
             for (Player player : alivePlayers) {
-                player.teleport(arena.getCenterSpawn());
+                if (tntHolders.contains(player)) {
+                    plugin.getPlayerManager().setTNTHolder(player, true);
+                } else {
+                    plugin.getPlayerManager().setTNTHolder(player, false);
+                }
+
+                // Apply glowing if configured
+                if (config.isGlowing()) {
+                    plugin.getPlayerManager().applyGlowingEffect(player);
+                }
             }
+
+            // Fire round start event
+            TNTTagRoundStartEvent event = new TNTTagRoundStartEvent(
+                this, currentRound, tntHolders, config.getDuration()
+            );
+            Bukkit.getPluginManager().callEvent(event);
+
+            // Start round timer
+            startRoundTimer();
+        } catch (Exception e) {
+            plugin.getLogger().severe("ラウンド開始エラー: ラウンド " + currentRound);
+            e.printStackTrace();
+            endGame(null, TNTTagEndEvent.EndReason.NO_SURVIVORS);
         }
-        
-        // Apply effects
-        for (Player player : alivePlayers) {
-            if (tntHolders.contains(player)) {
-                plugin.getPlayerManager().setTNTHolder(player, true);
-            } else {
-                plugin.getPlayerManager().setTNTHolder(player, false);
-            }
-            
-            // Apply glowing if configured
-            if (config.isGlowing()) {
-                plugin.getPlayerManager().applyGlowingEffect(player);
-            }
-        }
-        
-        // Fire round start event
-        TNTTagRoundStartEvent event = new TNTTagRoundStartEvent(
-            this, currentRound, tntHolders, config.getDuration()
-        );
-        Bukkit.getPluginManager().callEvent(event);
-        
-        // Start round timer
-        startRoundTimer();
     }
     
     /**
@@ -264,46 +281,55 @@ public class GameInstance {
         if (activeRound == null) {
             return;
         }
-        
+
         state = GameState.ROUND_ENDING;
-        
-        // Get TNT holders (victims)
-        List<Player> victims = new ArrayList<>(activeRound.getTntHolders());
-        
-        // Fire explosion event
-        TNTExplosionEvent explosionEvent = new TNTExplosionEvent(victims, currentRound);
-        Bukkit.getPluginManager().callEvent(explosionEvent);
-        
-        // Eliminate victims
-        for (Player victim : victims) {
-            PlayerGameData data = plugin.getPlayerManager().getPlayerData(victim);
-            data.setAlive(false);
-            data.setRoundEliminated(currentRound);
-            victim.setGameMode(GameMode.SPECTATOR);
-            
-            // TODO: Play explosion effects
+        plugin.getLogger().info("ラウンド " + currentRound + " 終了");
+
+        try {
+            // Get TNT holders (victims)
+            List<Player> victims = new ArrayList<>(activeRound.getTntHolders());
+            plugin.getLogger().info("脱落者: " + victims.size() + "人");
+
+            // Fire explosion event
+            TNTExplosionEvent explosionEvent = new TNTExplosionEvent(victims, currentRound);
+            Bukkit.getPluginManager().callEvent(explosionEvent);
+
+            // Eliminate victims
+            for (Player victim : victims) {
+                PlayerGameData data = plugin.getPlayerManager().getPlayerData(victim);
+                data.setAlive(false);
+                data.setRoundEliminated(currentRound);
+                victim.setGameMode(GameMode.SPECTATOR);
+
+                if (plugin.getConfigManager().isDebug()) {
+                    plugin.getLogger().info(victim.getName() + " が脱落しました");
+                }
+            }
+
+            // Update survivors
+            for (Player player : getAlivePlayers()) {
+                PlayerGameData data = plugin.getPlayerManager().getPlayerData(player);
+                data.incrementRoundsSurvived();
+            }
+
+            // Check if game should end
+            Set<Player> alivePlayers = getAlivePlayers();
+            if (alivePlayers.size() <= 1 || currentRound >= 6) {
+                Player winner = alivePlayers.size() == 1 ? alivePlayers.iterator().next() : null;
+                endGame(winner, TNTTagEndEvent.EndReason.ALL_ROUNDS_COMPLETE);
+                return;
+            }
+
+            // Schedule next round
+            Bukkit.getScheduler().runTaskLater(plugin, () -> {
+                currentRound++;
+                state = GameState.IN_GAME;
+                startRound();
+            }, 60L); // 3 seconds delay
+        } catch (Exception e) {
+            plugin.getLogger().severe("ラウンド終了エラー: ラウンド " + currentRound);
+            e.printStackTrace();
         }
-        
-        // Update survivors
-        for (Player player : getAlivePlayers()) {
-            PlayerGameData data = plugin.getPlayerManager().getPlayerData(player);
-            data.incrementRoundsSurvived();
-        }
-        
-        // Check if game should end
-        Set<Player> alivePlayers = getAlivePlayers();
-        if (alivePlayers.size() <= 1 || currentRound >= 6) {
-            Player winner = alivePlayers.size() == 1 ? alivePlayers.iterator().next() : null;
-            endGame(winner, TNTTagEndEvent.EndReason.ALL_ROUNDS_COMPLETE);
-            return;
-        }
-        
-        // Schedule next round
-        Bukkit.getScheduler().runTaskLater(plugin, () -> {
-            currentRound++;
-            state = GameState.IN_GAME;
-            startRound();
-        }, 60L); // 3 seconds delay
     }
     
     /**
@@ -311,55 +337,75 @@ public class GameInstance {
      */
     public void endGame(Player winner, TNTTagEndEvent.EndReason reason) {
         state = GameState.ENDING;
+        plugin.getLogger().info("ゲーム終了: " + arena.getName() + " (理由: " + reason + ", 勝者: " + (winner != null ? winner.getName() : "なし") + ")");
 
-        // Cancel tasks
-        if (countdownTask != null) {
-            countdownTask.cancel();
-        }
-        if (gameTask != null) {
-            gameTask.cancel();
-        }
-
-        // Fire end event
-        TNTTagEndEvent event = new TNTTagEndEvent(this, winner, reason);
-        Bukkit.getPluginManager().callEvent(event);
-
-        // Update statistics for all players
-        StatsManager statsManager = plugin.getPlayerManager().getStatsManager();
-
-        for (Player player : players) {
-            PlayerGameData data = plugin.getPlayerManager().getPlayerData(player);
-            GameStatistics stats = statsManager.getStats(player);
-
-            // Increment games played
-            stats.incrementGamesPlayed();
-
-            // Add rounds survived
-            stats.addRoundsSurvived(data.getRoundsSurvived());
-
-            // Track tags
-            stats.addTntTagsGiven(data.getTntTagsGiven());
-            stats.addTntTagsReceived(data.getTntTagsReceived());
-
-            // Calculate survival time (rounds survived * average round duration)
-            double survivalTime = data.getRoundsSurvived() * 35.0; // Average 35 seconds per round
-            stats.addSurvivalTime(survivalTime);
-
-            // Check if this player won
-            if (winner != null && player.getUniqueId().equals(winner.getUniqueId())) {
-                stats.incrementWins();
+        try {
+            // Cancel tasks
+            if (countdownTask != null) {
+                countdownTask.cancel();
+            }
+            if (gameTask != null) {
+                gameTask.cancel();
             }
 
-            // Save stats
-            statsManager.saveStats(stats);
+            // Fire end event
+            TNTTagEndEvent event = new TNTTagEndEvent(this, winner, reason);
+            Bukkit.getPluginManager().callEvent(event);
+
+            // Update statistics for all players
+            StatsManager statsManager = plugin.getPlayerManager().getStatsManager();
+
+            for (Player player : players) {
+                try {
+                    PlayerGameData data = plugin.getPlayerManager().getPlayerData(player);
+                    GameStatistics stats = statsManager.getStats(player);
+
+                    // Increment games played
+                    stats.incrementGamesPlayed();
+
+                    // Add rounds survived
+                    stats.addRoundsSurvived(data.getRoundsSurvived());
+
+                    // Track tags
+                    stats.addTntTagsGiven(data.getTntTagsGiven());
+                    stats.addTntTagsReceived(data.getTntTagsReceived());
+
+                    // Calculate survival time (rounds survived * average round duration)
+                    double survivalTime = data.getRoundsSurvived() * 35.0; // Average 35 seconds per round
+                    stats.addSurvivalTime(survivalTime);
+
+                    // Check if this player won
+                    if (winner != null && player.getUniqueId().equals(winner.getUniqueId())) {
+                        stats.incrementWins();
+                    }
+
+                    // Save stats
+                    statsManager.saveStats(stats);
+                } catch (Exception e) {
+                    plugin.getLogger().severe("統計保存エラー: " + player.getName());
+                    e.printStackTrace();
+                }
+            }
+
+            // Display results
+            ResultsManager resultsManager = new ResultsManager(plugin);
+            resultsManager.displayResults(this, winner);
+
+            // Cleanup
+            cleanup();
+
+            plugin.getLogger().info("ゲームクリーンアップ完了: " + arena.getName());
+        } catch (Exception e) {
+            plugin.getLogger().severe("ゲーム終了エラー: " + arena.getName());
+            e.printStackTrace();
+            // Force cleanup even if errors occurred
+            try {
+                cleanup();
+            } catch (Exception ex) {
+                plugin.getLogger().severe("クリーンアップエラー: " + arena.getName());
+                ex.printStackTrace();
+            }
         }
-
-        // Display results
-        ResultsManager resultsManager = new ResultsManager(plugin);
-        resultsManager.displayResults(this, winner);
-
-        // Cleanup
-        cleanup();
     }
     
     /**

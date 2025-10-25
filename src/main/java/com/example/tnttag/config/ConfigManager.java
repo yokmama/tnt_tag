@@ -22,6 +22,7 @@ public class ConfigManager {
         plugin.saveDefaultConfig();
         this.config = plugin.getConfig();
         this.roundConfigs = loadRoundConfigs();
+        validate();
     }
     
     /**
@@ -31,7 +32,86 @@ public class ConfigManager {
         plugin.reloadConfig();
         this.config = plugin.getConfig();
         this.roundConfigs = loadRoundConfigs();
+        validate();
         plugin.getLogger().info("設定をリロードしました");
+    }
+
+    /**
+     * Validate configuration settings
+     */
+    public void validate() {
+        boolean hasErrors = false;
+
+        // Validate player counts
+        int minPlayers = getMinPlayers();
+        int maxPlayers = getMaxPlayers();
+
+        if (minPlayers <= 0) {
+            plugin.getLogger().warning("game.min_players must be > 0, using default: 20");
+            hasErrors = true;
+        }
+
+        if (maxPlayers <= 0) {
+            plugin.getLogger().warning("game.max_players must be > 0, using default: 25");
+            hasErrors = true;
+        }
+
+        if (minPlayers > maxPlayers) {
+            plugin.getLogger().warning("game.min_players (" + minPlayers + ") > game.max_players (" + maxPlayers + "), using defaults");
+            hasErrors = true;
+        }
+
+        // Validate round count
+        if (getTotalRounds() != 6) {
+            plugin.getLogger().warning("game.rounds should be 6 (found: " + getTotalRounds() + "), game may not work as intended");
+        }
+
+        // Validate tag cooldown
+        if (getTagCooldown() < 0) {
+            plugin.getLogger().warning("game.tag_cooldown must be >= 0, using default: 0.5");
+            hasErrors = true;
+        }
+
+        // Validate round configurations
+        if (roundConfigs.size() != 6) {
+            plugin.getLogger().severe("Expected 6 round configurations, found: " + roundConfigs.size());
+            hasErrors = true;
+        }
+
+        for (int i = 0; i < roundConfigs.size(); i++) {
+            RoundConfig round = roundConfigs.get(i);
+            int roundNum = i + 1;
+
+            if (round.getDuration() <= 0) {
+                plugin.getLogger().warning("Round " + roundNum + " duration must be > 0 (found: " + round.getDuration() + ")");
+                hasErrors = true;
+            }
+
+            if (round.getFixedTNTHolders() == -1 && round.getTntHoldersRatio() == -1.0) {
+                plugin.getLogger().warning("Round " + roundNum + " must have either tnt_holders or tnt_holders_ratio defined");
+                hasErrors = true;
+            }
+
+            if (round.getTntHoldersRatio() > 0 && (round.getTntHoldersRatio() < 0.01 || round.getTntHoldersRatio() > 1.0)) {
+                plugin.getLogger().warning("Round " + roundNum + " tnt_holders_ratio should be between 0.01 and 1.0 (found: " + round.getTntHoldersRatio() + ")");
+            }
+        }
+
+        // Validate effects settings
+        if (getParticleRadius() < 0) {
+            plugin.getLogger().warning("effects.particle_radius must be >= 0, using default: 20.0");
+            hasErrors = true;
+        }
+
+        if (getSoundVolume() < 0 || getSoundVolume() > 1.0) {
+            plugin.getLogger().warning("effects.sound_volume should be between 0.0 and 1.0 (found: " + getSoundVolume() + ")");
+        }
+
+        if (hasErrors) {
+            plugin.getLogger().warning("設定に問題があります。デフォルト値を使用する項目があります。");
+        } else {
+            plugin.getLogger().info("設定の検証が完了しました");
+        }
     }
     
     /**
