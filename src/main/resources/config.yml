@@ -1,0 +1,57 @@
+# TNT TAG Configuration
+
+plugin:
+  language: ja_JP
+  debug: false
+
+database:
+  type: YAML  # YAML, SQLite, MySQL (future)
+
+game:
+  min_players: 20
+  max_players: 25
+  rounds: 6
+  countdown: 10
+  tag_cooldown: 0.5
+  explosion_countdown: 3
+  pvp_enabled: false
+
+round_settings:
+  round_1:
+    tnt_holders: 1
+    duration: 40
+    glowing: false
+  round_2:
+    tnt_holders_ratio: 0.25
+    duration: 30
+    glowing: false
+  round_3:
+    tnt_holders_ratio: 0.25
+    duration: 30
+    glowing: false
+  round_4:
+    tnt_holders_ratio: 0.5
+    duration: 25
+    glowing: false
+  round_5:
+    tnt_holders_ratio: 0.33
+    duration: 40
+    glowing: true
+  round_6:
+    tnt_holders_ratio: 0.33
+    duration: 50
+    glowing: true
+
+arena:
+  spawn_teleport: true
+  use_preset_map: true
+
+effects:
+  particle_radius: 20.0
+  sound_volume: 1.0
+
+rewards:
+  enabled: false
+  win: 100
+  per_round_survive: 20
+  per_tag: 5

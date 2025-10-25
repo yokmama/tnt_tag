@@ -1,0 +1,96 @@
+# TNT TAG Messages (Japanese)
+
+prefix: "&8[&cTNT TAG&8]&r "
+
+game:
+  start: "&a&lゲーム開始！TNTから逃げろ！"
+  round_start: "&e&lラウンド %round% 開始！"
+  tnt_received: "&c&lTNTを受け取った！他の人にタッチ！"
+  tnt_passed: "&a&lTNTを渡した！安全だ！"
+  explosion: "&4&l💥 ドカーン！💥"
+  eliminated: "&cあなたは爆発しました..."
+  victory: "&6&l🏆 勝利！最後の生存者です！"
+  spectating: "&7観戦モードになりました"
+
+hud:
+  waiting: "&7ゲーム開始を待っています..."
+  countdown: "&e%seconds%秒後に開始..."
+  tnt_holder_warning: "&c⚠ TNTを持っています！他の人にタッチ！⚠"
+  explosion_countdown: "&4💥 爆発まで %seconds%... 💥"
+  survivor_status: "&a残り時間: %time%秒 &7| &e生存者: %count%人"
+
+scoreboard:
+  title: "&c&l=== TNT TAG ==="
+  waiting: "&7状態: &e待機中"
+  countdown_state: "&7状態: &eまもなく開始"
+  in_game: "&7状態: &aゲーム中"
+  spectating: "&7状態: &7観戦中"
+  round: "&eラウンド: &f%current%/%total%"
+  time_remaining: "&e残り時間: &f%time%"
+  players: "&eプレイヤー: &f%current%/%max%人"
+  survivors: "&e生存者: &f%count%人"
+  tnt_holders: "&cTNT保持者: &f%count%人"
+  your_status_alive: "&aあなたの状態: &f生存中"
+  your_status_tnt: "&cあなたの状態: &fTNT保持中"
+  your_status_dead: "&7あなたの状態: &f脱落"
+
+commands:
+  join:
+    success: "&aアリーナ '&e%arena%&a' に参加しました"
+    already_in_game: "&c既にゲームに参加しています"
+    game_full: "&cゲームが満員です"
+    game_in_progress: "&cゲームは既に進行中です"
+    arena_not_found: "&cアリーナが見つかりません: %arena%"
+  leave:
+    success: "&aゲームから退出しました"
+    not_in_game: "&cゲームに参加していません"
+  list:
+    header: "&e&l════ TNT TAG アリーナ ════"
+    arena_entry: "&e%name% &7- &a[%state%]&7 (%players%/%max%人)"
+    footer: "&e&l═══════════════════════════"
+    no_arenas: "&c作成されたアリーナがありません"
+  stats:
+    header: "&e&l════ %player%の統計 ════"
+    games_played: "&7プレイ回数: &f%count%"
+    wins: "&7勝利数: &f%count%"
+    win_rate: "&7勝率: &f%rate%%"
+    total_rounds: "&7生存ラウンド数: &f%count%"
+    avg_survival: "&7平均生存時間: &f%time%秒"
+    tags_given: "&7TNTを渡した回数: &f%count%"
+    tags_received: "&7TNTを受け取った回数: &f%count%"
+    footer: "&e&l════════════════════════════"
+    not_found: "&cプレイヤーの統計が見つかりません"
+  setpos1:
+    success: "&aPosition 1を設定しました &e(%x%, %y%, %z%)"
+    no_permission: "&cこのコマンドを実行する権限がありません (OP required)"
+  setpos2:
+    success: "&aPosition 2を設定しました &e(%x%, %y%, %z%)"
+    pos1_not_set: "&cPosition 1が設定されていません"
+  creategame:
+    success: "&aアリーナ '&e%name%&a' を作成しました！"
+    positions_not_set: "&c両方のpositionを設定してください"
+    different_worlds: "&c両地点は同じワールドである必要があります"
+    too_small: "&cアリーナが小さすぎます（最小: 10ブロック）"
+    name_exists: "&cそのアリーナ名は既に使用されています"
+    usage: "&c使用方法: /tnttag creategame <arena_name>"
+  delete:
+    success: "&aアリーナ '&e%name%&a' を削除しました"
+    not_found: "&cアリーナが見つかりません: %name%"
+    game_active: "&cゲームが進行中のため削除できません"
+  start:
+    success: "&aゲームを強制開始しました"
+    not_found: "&cアリーナが見つかりません: %name%"
+    already_started: "&cゲームは既に開始しています"
+    no_players: "&cプレイヤーがいません"
+  stop:
+    success: "&aゲームを強制停止しました"
+    not_found: "&cアリーナが見つかりません: %name%"
+    not_active: "&cゲームが進行していません"
+  reload:
+    success: "&a設定をリロードしました"
+
+errors:
+  not_enough_players: "&cプレイヤーが不足しています（最小: %min%人）"
+  arena_not_found: "&cアリーナが見つかりません"
+  internal_error: "&c内部エラーが発生しました。管理者に連絡してください"
+  no_permission: "&cこのコマンドを実行する権限がありません"

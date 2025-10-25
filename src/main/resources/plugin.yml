@@ -1,4 +1,29 @@
-name: tnt_tag
-version: '1.0-SNAPSHOT'
-main: com.hacklab.minecraft.tnt_tag.Main
-api-version: '1.21'
+name: TNTTag
+version: '${project.version}'
+main: com.example.tnttag.TNTTagPlugin
+api-version: '1.20'
+author: 斉藤ゆうき
+description: TNT TAG - Minecraft Survival Tag Minigame
+
+commands:
+  tnttag:
+    description: TNT TAG main command
+    usage: /tnttag <subcommand>
+    aliases: [tt, tag]
+
+permissions:
+  tnttag.play:
+    description: Allows playing TNT TAG
+    default: true
+  tnttag.stats:
+    description: Allows viewing statistics
+    default: true
+  tnttag.admin:
+    description: Allows using admin commands
+    default: op
+  tnttag.vip:
+    description: VIP features (priority join)
+    default: false
+  tnttag.spectate:
+    description: Allows spectating games
+    default: true
