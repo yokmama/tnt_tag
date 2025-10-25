@@ -1,7 +1,7 @@
 name: TNTTag
 version: '${project.version}'
 main: com.example.tnttag.TNTTagPlugin
-api-version: '1.20'
+api-version: '1.21'
 author: 斉藤ゆうき
 description: TNT TAG - Minecraft Survival Tag Minigame
 
