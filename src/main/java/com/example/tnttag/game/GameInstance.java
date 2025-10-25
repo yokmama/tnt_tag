@@ -4,6 +4,9 @@ import com.example.tnttag.TNTTagPlugin;
 import com.example.tnttag.arena.Arena;
 import com.example.tnttag.events.*;
 import com.example.tnttag.player.PlayerGameData;
+import com.example.tnttag.stats.GameStatistics;
+import com.example.tnttag.stats.ResultsManager;
+import com.example.tnttag.stats.StatsManager;
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
 import org.bukkit.entity.Player;
@@ -308,7 +311,7 @@ public class GameInstance {
      */
     public void endGame(Player winner, TNTTagEndEvent.EndReason reason) {
         state = GameState.ENDING;
-        
+
         // Cancel tasks
         if (countdownTask != null) {
             countdownTask.cancel();
@@ -316,11 +319,45 @@ public class GameInstance {
         if (gameTask != null) {
             gameTask.cancel();
         }
-        
+
         // Fire end event
         TNTTagEndEvent event = new TNTTagEndEvent(this, winner, reason);
         Bukkit.getPluginManager().callEvent(event);
-        
+
+        // Update statistics for all players
+        StatsManager statsManager = plugin.getPlayerManager().getStatsManager();
+
+        for (Player player : players) {
+            PlayerGameData data = plugin.getPlayerManager().getPlayerData(player);
+            GameStatistics stats = statsManager.getStats(player);
+
+            // Increment games played
+            stats.incrementGamesPlayed();
+
+            // Add rounds survived
+            stats.addRoundsSurvived(data.getRoundsSurvived());
+
+            // Track tags
+            stats.addTntTagsGiven(data.getTntTagsGiven());
+            stats.addTntTagsReceived(data.getTntTagsReceived());
+
+            // Calculate survival time (rounds survived * average round duration)
+            double survivalTime = data.getRoundsSurvived() * 35.0; // Average 35 seconds per round
+            stats.addSurvivalTime(survivalTime);
+
+            // Check if this player won
+            if (winner != null && player.getUniqueId().equals(winner.getUniqueId())) {
+                stats.incrementWins();
+            }
+
+            // Save stats
+            statsManager.saveStats(stats);
+        }
+
+        // Display results
+        ResultsManager resultsManager = new ResultsManager(plugin);
+        resultsManager.displayResults(this, winner);
+
         // Cleanup
         cleanup();
     }

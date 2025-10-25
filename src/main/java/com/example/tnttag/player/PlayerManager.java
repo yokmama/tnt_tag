@@ -1,6 +1,7 @@
 package com.example.tnttag.player;
 
 import com.example.tnttag.TNTTagPlugin;
+import com.example.tnttag.stats.StatsManager;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -18,10 +19,12 @@ public class PlayerManager {
     
     private final TNTTagPlugin plugin;
     private final Map<UUID, PlayerGameData> playerData;
-    
+    private final StatsManager statsManager;
+
     public PlayerManager(TNTTagPlugin plugin) {
         this.plugin = plugin;
         this.playerData = new HashMap<>();
+        this.statsManager = new StatsManager(plugin);
     }
     
     /**
@@ -125,10 +128,16 @@ public class PlayerManager {
     }
     
     /**
+     * Get the stats manager
+     */
+    public StatsManager getStatsManager() {
+        return statsManager;
+    }
+
+    /**
      * Save all player statistics
      */
     public void saveAllStats() {
-        // TODO: Implement statistics saving in Phase 7
-        plugin.getLogger().info("統計の保存（未実装）");
+        statsManager.saveAll();
     }
 }
