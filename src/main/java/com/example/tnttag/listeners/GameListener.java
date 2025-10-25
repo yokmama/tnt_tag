@@ -1,8 +1,10 @@
 package com.example.tnttag.listeners;
 
 import com.example.tnttag.TNTTagPlugin;
+import com.example.tnttag.effects.EffectManager;
 import com.example.tnttag.events.*;
 import com.example.tnttag.hud.TitleManager;
+import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -24,9 +26,11 @@ public class GameListener implements Listener {
     @EventHandler
     public void onGameStart(TNTTagStartEvent event) {
         plugin.getLogger().info("ゲーム開始: " + event.getGame().getArena().getName());
-        
-        // TODO: Play game start effects
-        // TODO: Send start messages to players
+
+        // Play game start effects
+        Location arenaCenter = event.getGame().getArena().getCenterSpawn();
+        EffectManager effectManager = plugin.getEffectManager();
+        effectManager.playGameStartEffects(arenaCenter, event.getGame().getPlayers());
     }
     
     /**
@@ -45,7 +49,10 @@ public class GameListener implements Listener {
             titleManager.sendRoundStart(player, event.getRoundNumber());
         }
 
-        // TODO: Play round start effects
+        // Play round start effects
+        Location arenaCenter = event.getGame().getArena().getCenterSpawn();
+        EffectManager effectManager = plugin.getEffectManager();
+        effectManager.playRoundStartEffects(arenaCenter, event.getGame().getPlayers());
     }
     
     /**
@@ -67,7 +74,10 @@ public class GameListener implements Listener {
         titleManager.sendTNTPassed(event.getTagger());
         titleManager.sendTNTReceived(event.getTagged());
 
-        // TODO: Play tag effects
+        // Play tag effects
+        Location tagLocation = event.getTagged().getLocation();
+        EffectManager effectManager = plugin.getEffectManager();
+        effectManager.playTagEffects(tagLocation, event.getTagger(), event.getTagged());
     }
     
     /**
@@ -81,11 +91,15 @@ public class GameListener implements Listener {
 
         // Send explosion title to victims
         TitleManager titleManager = plugin.getHUDManager().getTitleManager();
+        EffectManager effectManager = plugin.getEffectManager();
+
         for (Player victim : event.getVictims()) {
             titleManager.sendExplosion(victim);
-        }
 
-        // TODO: Play explosion effects
+            // Play explosion effects for each victim
+            Location victimLoc = victim.getLocation();
+            effectManager.playExplosionEffects(victimLoc, victim);
+        }
     }
     
     /**
@@ -102,9 +116,14 @@ public class GameListener implements Listener {
         if (event.getWinner() != null) {
             TitleManager titleManager = plugin.getHUDManager().getTitleManager();
             titleManager.sendVictory(event.getWinner());
+
+            // Play victory effects
+            Player winner = event.getWinner();
+            Location winnerLoc = winner.getLocation();
+            EffectManager effectManager = plugin.getEffectManager();
+            effectManager.playVictoryEffects(winnerLoc, winner);
         }
 
-        // TODO: Play victory effects
         // TODO: Display results to players
     }
 }

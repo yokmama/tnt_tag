@@ -6,6 +6,7 @@ import com.example.tnttag.game.GameManager;
 import com.example.tnttag.player.PlayerManager;
 import com.example.tnttag.arena.ArenaManager;
 import com.example.tnttag.hud.HUDManager;
+import com.example.tnttag.effects.EffectManager;
 import com.example.tnttag.commands.TNTTagCommandExecutor;
 import com.example.tnttag.listeners.PlayerListener;
 import com.example.tnttag.listeners.GameListener;
@@ -31,6 +32,7 @@ public class TNTTagPlugin extends JavaPlugin {
     private PlayerManager playerManager;
     private ArenaManager arenaManager;
     private HUDManager hudManager;
+    private EffectManager effectManager;
     
     @Override
     public void onEnable() {
@@ -46,6 +48,7 @@ public class TNTTagPlugin extends JavaPlugin {
             this.playerManager = new PlayerManager(this);
             this.gameManager = new GameManager(this);
             this.hudManager = new HUDManager(this);
+            this.effectManager = new EffectManager(this);
 
             getLogger().info("マネージャーの初期化完了");
         } catch (Exception e) {
@@ -145,5 +148,12 @@ public class TNTTagPlugin extends JavaPlugin {
      */
     public HUDManager getHUDManager() {
         return hudManager;
+    }
+
+    /**
+     * Get EffectManager
+     */
+    public EffectManager getEffectManager() {
+        return effectManager;
     }
 }
