@@ -2,6 +2,8 @@ package com.example.tnttag.listeners;
 
 import com.example.tnttag.TNTTagPlugin;
 import com.example.tnttag.events.*;
+import com.example.tnttag.hud.TitleManager;
+import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 
@@ -33,12 +35,17 @@ public class GameListener implements Listener {
     @EventHandler
     public void onRoundStart(TNTTagRoundStartEvent event) {
         plugin.getLogger().info(
-            "ラウンド " + event.getRoundNumber() + " 開始: " + 
+            "ラウンド " + event.getRoundNumber() + " 開始: " +
             event.getTntHolders().size() + " TNT保持者"
         );
-        
+
+        // Send round start title to all players
+        TitleManager titleManager = plugin.getHUDManager().getTitleManager();
+        for (Player player : event.getGame().getPlayers()) {
+            titleManager.sendRoundStart(player, event.getRoundNumber());
+        }
+
         // TODO: Play round start effects
-        // TODO: Send round start messages to players
     }
     
     /**
@@ -49,14 +56,18 @@ public class GameListener implements Listener {
         if (event.isCancelled()) {
             return;
         }
-        
+
         plugin.getLogger().info(
-            event.getTagger().getName() + " → " + event.getTagged().getName() + 
+            event.getTagger().getName() + " → " + event.getTagged().getName() +
             " (ラウンド " + event.getRoundNumber() + ")"
         );
-        
+
+        // Send title messages
+        TitleManager titleManager = plugin.getHUDManager().getTitleManager();
+        titleManager.sendTNTPassed(event.getTagger());
+        titleManager.sendTNTReceived(event.getTagged());
+
         // TODO: Play tag effects
-        // TODO: Send tag messages to players
     }
     
     /**
@@ -67,9 +78,14 @@ public class GameListener implements Listener {
         plugin.getLogger().info(
             "爆発: " + event.getVictims().size() + " 人が脱落 (ラウンド " + event.getRoundNumber() + ")"
         );
-        
+
+        // Send explosion title to victims
+        TitleManager titleManager = plugin.getHUDManager().getTitleManager();
+        for (Player victim : event.getVictims()) {
+            titleManager.sendExplosion(victim);
+        }
+
         // TODO: Play explosion effects
-        // TODO: Send elimination messages to players
     }
     
     /**
@@ -81,7 +97,13 @@ public class GameListener implements Listener {
         plugin.getLogger().info(
             "ゲーム終了: 勝者 = " + winnerName + ", 理由 = " + event.getEndReason()
         );
-        
+
+        // Send victory title to winner
+        if (event.getWinner() != null) {
+            TitleManager titleManager = plugin.getHUDManager().getTitleManager();
+            titleManager.sendVictory(event.getWinner());
+        }
+
         // TODO: Play victory effects
         // TODO: Display results to players
     }

@@ -5,6 +5,7 @@ import com.example.tnttag.config.MessageManager;
 import com.example.tnttag.game.GameManager;
 import com.example.tnttag.player.PlayerManager;
 import com.example.tnttag.arena.ArenaManager;
+import com.example.tnttag.hud.HUDManager;
 import com.example.tnttag.commands.TNTTagCommandExecutor;
 import com.example.tnttag.listeners.PlayerListener;
 import com.example.tnttag.listeners.GameListener;
@@ -29,6 +30,7 @@ public class TNTTagPlugin extends JavaPlugin {
     private GameManager gameManager;
     private PlayerManager playerManager;
     private ArenaManager arenaManager;
+    private HUDManager hudManager;
     
     @Override
     public void onEnable() {
@@ -43,13 +45,17 @@ public class TNTTagPlugin extends JavaPlugin {
             this.arenaManager = new ArenaManager(this);
             this.playerManager = new PlayerManager(this);
             this.gameManager = new GameManager(this);
-            
+            this.hudManager = new HUDManager(this);
+
             getLogger().info("マネージャーの初期化完了");
         } catch (Exception e) {
             getLogger().log(Level.SEVERE, "マネージャーの初期化中にエラーが発生しました", e);
             getServer().getPluginManager().disablePlugin(this);
             return;
         }
+
+        // Start HUD system
+        hudManager.startAll();
         
         // Register commands
         TNTTagCommandExecutor commandExecutor = new TNTTagCommandExecutor(this);
@@ -67,22 +73,28 @@ public class TNTTagPlugin extends JavaPlugin {
     @Override
     public void onDisable() {
         getLogger().info("TNT TAG プラグインを無効化しています...");
-        
+
+        // Stop HUD system
+        if (hudManager != null) {
+            hudManager.stopAll();
+            hudManager.cleanup();
+        }
+
         // Stop all active games
         if (gameManager != null) {
             gameManager.stopAllGames();
         }
-        
+
         // Save arena configurations
         if (arenaManager != null) {
             arenaManager.saveArenas();
         }
-        
+
         // Save player statistics
         if (playerManager != null) {
             playerManager.saveAllStats();
         }
-        
+
         getLogger().info("TNT TAG プラグインが無効化されました");
     }
     
@@ -126,5 +138,12 @@ public class TNTTagPlugin extends JavaPlugin {
      */
     public ArenaManager getArenaManager() {
         return arenaManager;
+    }
+
+    /**
+     * Get HUDManager
+     */
+    public HUDManager getHUDManager() {
+        return hudManager;
     }
 }
