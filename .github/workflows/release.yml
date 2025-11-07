@@ -26,7 +26,7 @@ jobs:
       run: chmod +x gradlew
 
     - name: Build with Gradle
-      run: ./gradlew build --no-daemon
+      run: ./gradlew clean shadowJar --no-daemon
       
     - name: Extract version from tag
       id: version
@@ -35,7 +35,7 @@ jobs:
     - name: Find JAR file
       id: jar
       run: |
-        JAR_FILE=$(find build/libs -name "*.jar" -not -name "*-sources.jar" -not -name "*-javadoc.jar" | head -1)
+        JAR_FILE=$(find build/libs -name "*-all.jar" | head -1)
         echo "JAR_PATH=$JAR_FILE" >> $GITHUB_OUTPUT
         echo "JAR_NAME=$(basename $JAR_FILE)" >> $GITHUB_OUTPUT
         
@@ -54,24 +54,20 @@ jobs:
       with:
         modrinth-id: ${{ secrets.MODRINTH_PROJECT_ID }}
         modrinth-token: ${{ secrets.MODRINTH_PAT }}
-        
+
         files: ${{ steps.jar.outputs.JAR_PATH }}
         name: "TNT Tag v${{ steps.version.outputs.VERSION }}"
         version: ${{ steps.version.outputs.VERSION }}
         version-type: release
-        
+
         loaders: |
           spigot
           paper
-          
+
         game-versions: |
           1.21.5
-          
-        dependencies: |
-          spigot-api | suggests
-          paper-api | suggests
-          
+
         changelog-file: CHANGELOG.md
-        
+
         retry-attempts: 2
         retry-delay: 10000
