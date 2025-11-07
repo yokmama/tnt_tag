@@ -61,3 +61,6 @@ gradle-app.setting
 .env
 .env.*
 !.env.example
+specs
+run
+.gradle
