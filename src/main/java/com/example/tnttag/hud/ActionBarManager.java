@@ -6,6 +6,7 @@ import com.example.tnttag.game.GameState;
 import com.example.tnttag.game.Round;
 import com.example.tnttag.player.PlayerGameData;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitTask;
@@ -29,8 +30,9 @@ public class ActionBarManager {
         if (updateTask != null) {
             updateTask.cancel();
         }
-        
-        updateTask = Bukkit.getScheduler().runTaskTimerAsynchronously(plugin, () -> {
+
+        // Run on main thread to avoid async issues
+        updateTask = Bukkit.getScheduler().runTaskTimer(plugin, () -> {
             updateAll();
         }, 0L, 10L); // Every 0.5 seconds
     }
@@ -57,30 +59,39 @@ public class ActionBarManager {
     }
     
     /**
+     * Send countdown message to player's action bar
+     */
+    public void sendCountdown(Player player, int seconds) {
+        String message = plugin.getMessageManager().getMessage("hud.countdown",
+            plugin.getMessageManager().createPlaceholders("seconds", String.valueOf(seconds)));
+        player.sendActionBar(LegacyComponentSerializer.legacySection().deserialize(message));
+    }
+
+    /**
      * Update a specific player's action bar
      */
     public void updatePlayerActionBar(Player player, GameInstance game) {
         PlayerGameData data = plugin.getPlayerManager().getPlayerData(player);
         GameState state = game.getState();
-        
+
         String message = "";
-        
+
         if (state == GameState.WAITING) {
             message = "§7ゲーム開始を待っています...";
-            
+
         } else if (state == GameState.STARTING) {
             message = "§eまもなくゲーム開始！";
-            
+
         } else if (state == GameState.IN_GAME || state == GameState.ROUND_ENDING) {
             Round round = game.getActiveRound();
-            
+
             if (round != null) {
                 int remainingTime = round.getRemainingTime();
-                
+
                 if (!data.isAlive()) {
                     // Spectating
                     message = "§7観戦中 | §e生存者: " + game.getAlivePlayers().size() + "人";
-                    
+
                 } else if (data.isTNTHolder()) {
                     // TNT holder
                     if (remainingTime <= 3) {
@@ -89,16 +100,16 @@ public class ActionBarManager {
                     } else {
                         message = "§c⚠ TNTを持っています！他の人にタッチ！⚠";
                     }
-                    
+
                 } else {
                     // Normal player
                     message = "§a残り時間: " + remainingTime + "秒 §7| §e生存者: " + game.getAlivePlayers().size() + "人";
                 }
             }
         }
-        
-        // Send action bar
-        player.sendActionBar(Component.text(message));
+
+        // Send action bar with legacy color code support
+        player.sendActionBar(LegacyComponentSerializer.legacySection().deserialize(message));
     }
     
     /**

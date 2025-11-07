@@ -1,5 +1,5 @@
 name: TNTTag
-version: '${project.version}'
+version: '${version}'
 main: com.example.tnttag.TNTTagPlugin
 api-version: '1.21'
 author: 斉藤ゆうき

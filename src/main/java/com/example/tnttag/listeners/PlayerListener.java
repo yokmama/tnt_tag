@@ -5,6 +5,7 @@ import com.example.tnttag.game.GameInstance;
 import com.example.tnttag.game.GameState;
 import com.example.tnttag.player.PlayerGameData;
 import org.bukkit.GameMode;
+import org.bukkit.Location;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
@@ -101,18 +102,36 @@ public class PlayerListener implements Listener {
         org.bukkit.entity.Player player = event.getPlayer();
         GameInstance game = plugin.getGameManager().getPlayerGame(player);
 
-        if (game == null || game.getState() != GameState.IN_GAME) {
+        // Only check boundary if player is in a game AND game is running
+        if (game == null) {
             return;
         }
 
-        // Check if player is outside arena bounds
-        if (!game.getArena().contains(event.getTo())) {
-            // Teleport back to center
-            player.teleport(game.getArena().getCenterSpawn());
-            player.sendMessage("§c警告: アリーナ外に出ようとしました！");
+        GameState state = game.getState();
+        if (state != GameState.IN_GAME && state != GameState.ROUND_ENDING) {
+            return;
+        }
+
+        // Check if player is outside arena bounds (X and Z only, ignore Y)
+        Location to = event.getTo();
+        Location from = event.getFrom();
+
+        // Create 2D boundary check (ignore Y coordinate)
+        org.bukkit.util.BoundingBox bounds = game.getArena().getBoundingBox();
+
+        boolean outsideX = to.getX() < bounds.getMinX() || to.getX() > bounds.getMaxX();
+        boolean outsideZ = to.getZ() < bounds.getMinZ() || to.getZ() > bounds.getMaxZ();
+
+        if (outsideX || outsideZ) {
+            // Teleport back to previous position instead of canceling
+            event.setTo(from);
+            player.sendMessage("§c警告: アリーナ外に出ることはできません！");
 
             if (plugin.getConfigManager().isDebug()) {
-                plugin.getLogger().info(player.getName() + " attempted to leave arena bounds");
+                plugin.getLogger().info(player.getName() + " attempted to leave arena bounds: " +
+                    "X=" + to.getBlockX() + " Z=" + to.getBlockZ() +
+                    " (bounds: X=" + bounds.getMinX() + "~" + bounds.getMaxX() +
+                    " Z=" + bounds.getMinZ() + "~" + bounds.getMaxZ() + ")");
             }
         }
     }

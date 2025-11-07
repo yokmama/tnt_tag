@@ -50,7 +50,7 @@ public class FireworkEffects {
      * Spawn a random colored firework
      */
     public void spawnRandomFirework(Location location) {
-        Firework firework = (Firework) location.getWorld().spawnEntity(location, EntityType.FIREWORK);
+        Firework firework = (Firework) location.getWorld().spawnEntity(location, EntityType.FIREWORK_ROCKET);
         FireworkMeta meta = firework.getFireworkMeta();
         
         // Random colors
@@ -91,7 +91,7 @@ public class FireworkEffects {
      * Launch a single celebration firework
      */
     public void launchSingleFirework(Location location, Color color) {
-        Firework firework = (Firework) location.getWorld().spawnEntity(location, EntityType.FIREWORK);
+        Firework firework = (Firework) location.getWorld().spawnEntity(location, EntityType.FIREWORK_ROCKET);
         FireworkMeta meta = firework.getFireworkMeta();
         
         FireworkEffect effect = FireworkEffect.builder()

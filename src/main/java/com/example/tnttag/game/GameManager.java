@@ -151,11 +151,30 @@ public class GameManager {
      */
     private void removeGame(GameInstance game) {
         games.remove(game.getArena().getName());
-        
+
         // Remove all players from player games map
         for (Player player : game.getPlayers()) {
             playerGames.remove(player.getUniqueId());
         }
+    }
+
+    /**
+     * Clear all players from a game in the playerGames map
+     * Used during game cleanup to prevent "already in game" errors
+     */
+    public void clearPlayersFromGame(GameInstance game) {
+        // Remove all players that belong to this game
+        playerGames.entrySet().removeIf(entry -> entry.getValue() == game);
+    }
+
+    /**
+     * Remove a game instance after it has ended
+     * Used by GameInstance.endGame() to clean up after game completion
+     */
+    public void removeGameInstance(GameInstance game) {
+        String arenaName = game.getArena().getName();
+        games.remove(arenaName);
+        plugin.getLogger().info("ゲームインスタンスを削除しました: " + arenaName);
     }
     
     /**

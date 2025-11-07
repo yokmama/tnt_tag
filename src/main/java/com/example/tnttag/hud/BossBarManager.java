@@ -36,8 +36,9 @@ public class BossBarManager {
         if (updateTask != null) {
             updateTask.cancel();
         }
-        
-        updateTask = Bukkit.getScheduler().runTaskTimerAsynchronously(plugin, () -> {
+
+        // Run on main thread to avoid async issues
+        updateTask = Bukkit.getScheduler().runTaskTimer(plugin, () -> {
             updateAll();
         }, 0L, 2L); // Every 0.1 seconds
     }

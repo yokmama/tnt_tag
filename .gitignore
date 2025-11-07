@@ -50,3 +50,14 @@ buildtools/
 
 # Stats
 stats/
+
+# Gradle
+.gradle/
+build/
+gradle-app.setting
+.gradletasknamecache
+
+# Environment
+.env
+.env.*
+!.env.example

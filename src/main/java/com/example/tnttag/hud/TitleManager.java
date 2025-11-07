@@ -1,6 +1,7 @@
 package com.example.tnttag.hud;
 
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import net.kyori.adventure.title.Title;
 import org.bukkit.entity.Player;
 
@@ -22,8 +23,8 @@ public class TitleManager {
      */
     public void sendRoundStart(Player player, int roundNumber) {
         Title title = Title.title(
-            Component.text("§e§lROUND " + roundNumber),
-            Component.text("§7TNTから逃げろ！"),
+            LegacyComponentSerializer.legacySection().deserialize("§e§lROUND " + roundNumber),
+            LegacyComponentSerializer.legacySection().deserialize("§7TNTから逃げろ！"),
             DEFAULT_TIMES
         );
         player.showTitle(title);
@@ -34,8 +35,8 @@ public class TitleManager {
      */
     public void sendTNTReceived(Player player) {
         Title title = Title.title(
-            Component.text("§c§lTNTを受け取った！"),
-            Component.text("§e他のプレイヤーにタッチ！"),
+            LegacyComponentSerializer.legacySection().deserialize("§c§lTNTを受け取った！"),
+            LegacyComponentSerializer.legacySection().deserialize("§e他のプレイヤーにタッチ！"),
             DEFAULT_TIMES
         );
         player.showTitle(title);
@@ -46,8 +47,8 @@ public class TitleManager {
      */
     public void sendTNTPassed(Player player) {
         Title title = Title.title(
-            Component.text("§a§lTNTを渡した！"),
-            Component.text("§7安全だ！"),
+            LegacyComponentSerializer.legacySection().deserialize("§a§lTNTを渡した！"),
+            LegacyComponentSerializer.legacySection().deserialize("§7安全だ！"),
             DEFAULT_TIMES
         );
         player.showTitle(title);
@@ -58,8 +59,8 @@ public class TitleManager {
      */
     public void sendExplosion(Player player) {
         Title title = Title.title(
-            Component.text("§4§l💥 BOOM! 💥"),
-            Component.text("§cあなたは爆発しました"),
+            LegacyComponentSerializer.legacySection().deserialize("§4§l💥 BOOM! 💥"),
+            LegacyComponentSerializer.legacySection().deserialize("§cあなたは爆発しました"),
             DEFAULT_TIMES
         );
         player.showTitle(title);
@@ -70,8 +71,8 @@ public class TitleManager {
      */
     public void sendVictory(Player player) {
         Title title = Title.title(
-            Component.text("§6§l🏆 VICTORY! 🏆"),
-            Component.text("§e最後の生存者！"),
+            LegacyComponentSerializer.legacySection().deserialize("§6§l🏆 VICTORY! 🏆"),
+            LegacyComponentSerializer.legacySection().deserialize("§e最後の生存者！"),
             DEFAULT_TIMES
         );
         player.showTitle(title);
@@ -82,12 +83,28 @@ public class TitleManager {
      */
     public void sendCountdown(Player player, int seconds) {
         Title title = Title.title(
-            Component.text("§e§l" + seconds),
-            Component.text("§7ゲーム開始まで..."),
+            LegacyComponentSerializer.legacySection().deserialize("§e§l" + seconds),
+            LegacyComponentSerializer.legacySection().deserialize("§7ゲーム開始まで..."),
             Title.Times.times(
                 Duration.ofMillis(0),
                 Duration.ofMillis(1000),
                 Duration.ofMillis(0)
+            )
+        );
+        player.showTitle(title);
+    }
+
+    /**
+     * Send countdown title for 3, 2, 1
+     */
+    public void sendCountdownTitle(Player player, int number) {
+        Title title = Title.title(
+            LegacyComponentSerializer.legacySection().deserialize("§e§l" + number),
+            Component.empty(),
+            Title.Times.times(
+                Duration.ofMillis(200),  // fadeIn: 10 ticks
+                Duration.ofMillis(400),  // stay: 20 ticks
+                Duration.ofMillis(200)   // fadeOut: 10 ticks
             )
         );
         player.showTitle(title);
@@ -98,8 +115,8 @@ public class TitleManager {
      */
     public void sendGameStart(Player player) {
         Title title = Title.title(
-            Component.text("§a§lゲーム開始！"),
-            Component.text("§7TNTから逃げろ！"),
+            LegacyComponentSerializer.legacySection().deserialize("§a§lゲーム開始！"),
+            LegacyComponentSerializer.legacySection().deserialize("§7TNTから逃げろ！"),
             DEFAULT_TIMES
         );
         player.showTitle(title);

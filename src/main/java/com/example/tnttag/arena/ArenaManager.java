@@ -146,9 +146,9 @@ public class ArenaManager {
             return false;
         }
         
-        // Calculate center spawn
+        // Calculate center spawn (middle of the arena)
         double centerX = (pos1.getX() + pos2.getX()) / 2;
-        double centerY = Math.max(pos1.getY(), pos2.getY());
+        double centerY = (pos1.getY() + pos2.getY()) / 2;
         double centerZ = (pos1.getZ() + pos2.getZ()) / 2;
         Location centerSpawn = new Location(world, centerX, centerY, centerZ);
         

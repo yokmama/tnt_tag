@@ -97,15 +97,25 @@ public class GameInstance {
         if (state != GameState.WAITING) {
             return false;
         }
-        
+
         int maxPlayers = plugin.getConfigManager().getMaxPlayers();
         if (players.size() >= maxPlayers) {
             return false;
         }
-        
+
         players.add(player);
         plugin.getPlayerManager().getPlayerData(player); // Initialize data
-        
+
+        // Auto-start logic: check if minimum player count is reached
+        int minPlayers = plugin.getConfigManager().getMinPlayers();
+        if (players.size() >= minPlayers) {
+            // Verify we're still in WAITING state (prevent race conditions)
+            if (state == GameState.WAITING) {
+                plugin.getLogger().info("最小プレイヤー数に達しました。ゲームを自動開始します (" + players.size() + "/" + maxPlayers + "人)");
+                start();
+            }
+        }
+
         return true;
     }
     
@@ -114,9 +124,15 @@ public class GameInstance {
      */
     public void removePlayer(Player player) {
         players.remove(player);
+
+        // Remove HUD elements
+        plugin.getHUDManager().getScoreboardManager().removeScoreboard(player);
+        plugin.getHUDManager().getBossBarManager().hideBossBar(player);
+
+        // Remove player data and effects
         plugin.getPlayerManager().removePlayerData(player);
         plugin.getPlayerManager().removeAllEffects(player);
-        
+
         // If player was TNT holder, redistribute TNT
         if (activeRound != null && activeRound.isTNTHolder(player)) {
             activeRound.removeTNTHolder(player);
@@ -158,19 +174,65 @@ public class GameInstance {
      */
     private void startCountdown() {
         int countdown = plugin.getConfigManager().getCountdown();
-        
+
         countdownTask = Bukkit.getScheduler().runTaskTimer(plugin, new Runnable() {
             int remaining = countdown;
-            
+
             @Override
             public void run() {
+                // Check if player count dropped below minimum (countdown cancellation)
+                int minPlayers = plugin.getConfigManager().getMinPlayers();
+                if (players.size() < minPlayers) {
+                    countdownTask.cancel();
+                    state = GameState.WAITING;
+
+                    // Notify remaining players
+                    String message = plugin.getMessageManager().getMessageWithPrefix("errors.not_enough_players",
+                        plugin.getMessageManager().createPlaceholders("min", String.valueOf(minPlayers)));
+                    for (Player player : players) {
+                        player.sendMessage(message);
+                    }
+
+                    plugin.getLogger().info("カウントダウンがキャンセルされました（人数不足: " + players.size() + "/" + minPlayers + "人）");
+                    return;
+                }
+
                 if (remaining <= 0) {
                     countdownTask.cancel();
+
+                    // Play game start effects
+                    for (Player player : players) {
+                        plugin.getHUDManager().getTitleManager().sendGameStart(player);
+                    }
+                    plugin.getEffectManager().playGameStartEffects(arena.getCenterSpawn(), players);
+
                     startFirstRound();
                     return;
                 }
-                
-                // TODO: Display countdown to players
+
+                // Update action bar for all players
+                for (Player player : players) {
+                    plugin.getHUDManager().getActionBarManager().sendCountdown(player, remaining);
+                }
+
+                // Play sounds based on remaining time
+                if (remaining >= 4 && remaining <= 10) {
+                    // Tick sound (pitch 1.0) for 10-4 seconds
+                    for (Player player : players) {
+                        player.playSound(player.getLocation(), org.bukkit.Sound.BLOCK_NOTE_BLOCK_PLING, 1.0f, 1.0f);
+                    }
+                } else if (remaining >= 1 && remaining <= 3) {
+                    // High-pitch sound (pitch 2.0) for 3-1 seconds
+                    for (Player player : players) {
+                        player.playSound(player.getLocation(), org.bukkit.Sound.BLOCK_NOTE_BLOCK_PLING, 1.0f, 2.0f);
+                    }
+
+                    // Display title for 3, 2, 1
+                    for (Player player : players) {
+                        plugin.getHUDManager().getTitleManager().sendCountdownTitle(player, remaining);
+                    }
+                }
+
                 remaining--;
             }
         }, 0L, 20L); // Every second
@@ -394,6 +456,9 @@ public class GameInstance {
             // Cleanup
             cleanup();
 
+            // Remove this game from GameManager
+            plugin.getGameManager().removeGameInstance(this);
+
             plugin.getLogger().info("ゲームクリーンアップ完了: " + arena.getName());
         } catch (Exception e) {
             plugin.getLogger().severe("ゲーム終了エラー: " + arena.getName());
@@ -401,6 +466,8 @@ public class GameInstance {
             // Force cleanup even if errors occurred
             try {
                 cleanup();
+                // Remove this game from GameManager even on error
+                plugin.getGameManager().removeGameInstance(this);
             } catch (Exception ex) {
                 plugin.getLogger().severe("クリーンアップエラー: " + arena.getName());
                 ex.printStackTrace();
@@ -412,19 +479,37 @@ public class GameInstance {
      * Cleanup game resources
      */
     private void cleanup() {
+        plugin.getLogger().info("クリーンアップ開始: " + arena.getName() + " (プレイヤー数: " + players.size() + ")");
+
         // Remove world border
         arena.removeWorldBorder();
-        
+
+        // Create a copy of players list to avoid ConcurrentModificationException
+        List<Player> playersCopy = new ArrayList<>(players);
+
         // Remove effects and restore players
-        for (Player player : players) {
+        for (Player player : playersCopy) {
+            // Remove HUD elements
+            plugin.getHUDManager().getScoreboardManager().removeScoreboard(player);
+            plugin.getHUDManager().getBossBarManager().hideBossBar(player);
+
+            // Remove effects and restore player state
             plugin.getPlayerManager().removeAllEffects(player);
             player.setGameMode(GameMode.SURVIVAL);
             plugin.getPlayerManager().removePlayerData(player);
+
+            plugin.getLogger().info("プレイヤークリーンアップ完了: " + player.getName());
         }
-        
+
+        // Clear all player references from GameManager
+        plugin.getGameManager().clearPlayersFromGame(this);
+        plugin.getLogger().info("GameManager.playerGamesマップをクリアしました");
+
         // Clear references
         players.clear();
         activeRound = null;
+
+        plugin.getLogger().info("全参照をクリアしました: " + arena.getName());
     }
     
     /**

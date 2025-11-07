@@ -61,8 +61,8 @@ public class ParticleEffects {
      * Game start effects (green particles + happy villagers)
      */
     public void playGameStartEffect(Location location) {
-        spawnParticleOptimized(location, Particle.VILLAGER_HAPPY, 50);
-        spawnParticleOptimized(location, Particle.TOTEM, 30);
+        spawnParticleOptimized(location, Particle.HAPPY_VILLAGER, 50);
+        spawnParticleOptimized(location, Particle.TOTEM_OF_UNDYING, 30);
         
         // Create a circle of particles
         for (int i = 0; i < 360; i += 20) {
@@ -70,7 +70,7 @@ public class ParticleEffects {
             double x = location.getX() + Math.cos(radians) * 3;
             double z = location.getZ() + Math.sin(radians) * 3;
             Location particleLoc = new Location(location.getWorld(), x, location.getY() + 1, z);
-            spawnParticleOptimized(particleLoc, Particle.VILLAGER_HAPPY, 3);
+            spawnParticleOptimized(particleLoc, Particle.HAPPY_VILLAGER, 3);
         }
     }
     
@@ -93,12 +93,12 @@ public class ParticleEffects {
      * TNT holder trail effect (smoke + flame)
      */
     public void playTNTHolderTrail(Location location) {
-        spawnParticleOptimized(location, Particle.SMOKE_NORMAL, 5);
+        spawnParticleOptimized(location, Particle.SMOKE, 5);
         spawnParticleOptimized(location, Particle.FLAME, 3);
         
         // Red dust for visibility
         Particle.DustOptions redDust = new Particle.DustOptions(Color.RED, 1.0f);
-        spawnParticleOptimized(location, Particle.REDSTONE, 3, redDust);
+        spawnParticleOptimized(location, Particle.DUST, 3, redDust);
     }
     
     /**
@@ -106,11 +106,11 @@ public class ParticleEffects {
      */
     public void playTagEffect(Location location) {
         spawnParticleOptimized(location, Particle.CRIT, 30);
-        spawnParticleOptimized(location, Particle.ENCHANTMENT_TABLE, 20);
+        spawnParticleOptimized(location, Particle.ENCHANT, 20);
         
         // Yellow flash
         Particle.DustOptions yellowDust = new Particle.DustOptions(Color.YELLOW, 2.0f);
-        spawnParticleOptimized(location, Particle.REDSTONE, 15, yellowDust);
+        spawnParticleOptimized(location, Particle.DUST, 15, yellowDust);
     }
     
     /**
@@ -118,8 +118,8 @@ public class ParticleEffects {
      */
     public void playExplosionEffect(Location location) {
         // Main explosion
-        spawnParticleOptimized(location, Particle.EXPLOSION_LARGE, 5);
-        spawnParticleOptimized(location, Particle.EXPLOSION_NORMAL, 20);
+        spawnParticleOptimized(location, Particle.EXPLOSION_EMITTER, 5);
+        spawnParticleOptimized(location, Particle.EXPLOSION, 20);
         
         // Smoke clouds
         for (int i = 0; i < 8; i++) {
@@ -127,7 +127,7 @@ public class ParticleEffects {
             double x = location.getX() + Math.cos(angle) * 2;
             double z = location.getZ() + Math.sin(angle) * 2;
             Location smokeLoc = new Location(location.getWorld(), x, location.getY() + 1, z);
-            spawnParticleOptimized(smokeLoc, Particle.SMOKE_LARGE, 15);
+            spawnParticleOptimized(smokeLoc, Particle.LARGE_SMOKE, 15);
         }
         
         // Smoke rings (vertical)
@@ -137,7 +137,7 @@ public class ParticleEffects {
                 double x = location.getX() + Math.cos(radians) * (1 + y * 0.5);
                 double z = location.getZ() + Math.sin(radians) * (1 + y * 0.5);
                 Location ringLoc = new Location(location.getWorld(), x, location.getY() + y, z);
-                spawnParticleOptimized(ringLoc, Particle.SMOKE_NORMAL, 2);
+                spawnParticleOptimized(ringLoc, Particle.SMOKE, 2);
             }
         }
     }
@@ -146,13 +146,13 @@ public class ParticleEffects {
      * Victory effects (golden particles + sparkles)
      */
     public void playVictoryEffect(Location location) {
-        spawnParticleOptimized(location, Particle.TOTEM, 100);
-        spawnParticleOptimized(location, Particle.VILLAGER_HAPPY, 50);
+        spawnParticleOptimized(location, Particle.TOTEM_OF_UNDYING, 100);
+        spawnParticleOptimized(location, Particle.HAPPY_VILLAGER, 50);
         spawnParticleOptimized(location, Particle.END_ROD, 30);
         
         // Golden dust
         Particle.DustOptions goldDust = new Particle.DustOptions(Color.YELLOW, 2.0f);
-        spawnParticleOptimized(location, Particle.REDSTONE, 50, goldDust);
+        spawnParticleOptimized(location, Particle.DUST, 50, goldDust);
         
         // Spiral effect
         for (int i = 0; i < 360; i += 15) {
@@ -170,11 +170,11 @@ public class ParticleEffects {
      * Defeat effects (smoke clouds)
      */
     public void playDefeatEffect(Location location) {
-        spawnParticleOptimized(location, Particle.SMOKE_LARGE, 50);
+        spawnParticleOptimized(location, Particle.LARGE_SMOKE, 50);
         spawnParticleOptimized(location, Particle.CLOUD, 30);
         
         // Gray dust
         Particle.DustOptions grayDust = new Particle.DustOptions(Color.GRAY, 1.5f);
-        spawnParticleOptimized(location, Particle.REDSTONE, 30, grayDust);
+        spawnParticleOptimized(location, Particle.DUST, 30, grayDust);
     }
 }

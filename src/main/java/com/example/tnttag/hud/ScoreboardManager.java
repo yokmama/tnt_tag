@@ -35,8 +35,9 @@ public class ScoreboardManager {
         if (updateTask != null) {
             updateTask.cancel();
         }
-        
-        updateTask = Bukkit.getScheduler().runTaskTimerAsynchronously(plugin, () -> {
+
+        // Must run on main thread for scoreboard creation
+        updateTask = Bukkit.getScheduler().runTaskTimer(plugin, () -> {
             updateAll();
         }, 0L, 20L); // Every 1 second
     }
