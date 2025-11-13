@@ -61,15 +61,37 @@ public class Arena {
     
     /**
      * Get the bounding box for this arena
+     * IMPORTANT: pos1 and pos2 are player coordinates (with decimals),
+     * but we need to expand to full block boundaries.
+     * Example: If pos1.getX() = 63.290, the block is at X=63,
+     * and its boundary should be 63.0~64.0
      */
     public BoundingBox getBoundingBox() {
-        double minX = Math.min(pos1.getX(), pos2.getX());
-        double minY = Math.min(pos1.getY(), pos2.getY());
-        double minZ = Math.min(pos1.getZ(), pos2.getZ());
-        double maxX = Math.max(pos1.getX(), pos2.getX());
-        double maxY = Math.max(pos1.getY(), pos2.getY());
-        double maxZ = Math.max(pos1.getZ(), pos2.getZ());
-        
+        // Get block coordinates (floor for each position)
+        int blockX1 = pos1.getBlockX();
+        int blockY1 = pos1.getBlockY();
+        int blockZ1 = pos1.getBlockZ();
+        int blockX2 = pos2.getBlockX();
+        int blockY2 = pos2.getBlockY();
+        int blockZ2 = pos2.getBlockZ();
+
+        // Find min and max block coordinates
+        int minBlockX = Math.min(blockX1, blockX2);
+        int minBlockY = Math.min(blockY1, blockY2);
+        int minBlockZ = Math.min(blockZ1, blockZ2);
+        int maxBlockX = Math.max(blockX1, blockX2);
+        int maxBlockY = Math.max(blockY1, blockY2);
+        int maxBlockZ = Math.max(blockZ1, blockZ2);
+
+        // Convert to bounding box with full block boundaries
+        // Block N spans from N.0 to (N+1).0
+        double minX = minBlockX;
+        double minY = minBlockY;
+        double minZ = minBlockZ;
+        double maxX = maxBlockX + 1.0;
+        double maxY = maxBlockY + 1.0;
+        double maxZ = maxBlockZ + 1.0;
+
         return new BoundingBox(minX, minY, minZ, maxX, maxY, maxZ);
     }
     
@@ -84,27 +106,25 @@ public class Arena {
     }
     
     /**
-     * Get the radius from center to furthest corner
-     */
-    public double getRadius() {
-        double dx = Math.max(
-            Math.abs(centerSpawn.getX() - pos1.getX()),
-            Math.abs(centerSpawn.getX() - pos2.getX())
-        );
-        double dz = Math.max(
-            Math.abs(centerSpawn.getZ() - pos1.getZ()),
-            Math.abs(centerSpawn.getZ() - pos2.getZ())
-        );
-        return Math.sqrt(dx * dx + dz * dz);
-    }
-    
-    /**
      * Setup world border for this arena
+     * IMPORTANT: Must match the BoundingBox logic exactly
+     * Uses full block boundaries with margin for player hitbox
      */
     public void setupWorldBorder() {
+        // Get the bounding box (which uses full block boundaries)
+        BoundingBox bounds = getBoundingBox();
+
+        // Calculate the actual arena dimensions in blocks
+        double width = bounds.getMaxX() - bounds.getMinX();
+        double depth = bounds.getMaxZ() - bounds.getMinZ();
+
+        // World border is square, so use the larger dimension
+        // Add margin (0.3 * 2 = 0.6 for player hitbox on both sides, round up to 1.0 for safety)
+        double borderSize = Math.max(width, depth) + 1.0;
+
         WorldBorder border = world.getWorldBorder();
         border.setCenter(centerSpawn);
-        border.setSize(getRadius() * 2);
+        border.setSize(borderSize);
         border.setWarningDistance(5);
     }
     

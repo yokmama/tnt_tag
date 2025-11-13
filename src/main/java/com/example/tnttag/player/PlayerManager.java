@@ -50,25 +50,36 @@ public class PlayerManager {
     
     /**
      * Set a player as TNT holder
+     * Default behavior: assumes non-glowing round (removes glowing when holder = false)
      */
     public void setTNTHolder(Player player, boolean holder) {
+        setTNTHolder(player, holder, false);
+    }
+
+    /**
+     * Set a player as TNT holder with glowing round control
+     * @param player The player to modify
+     * @param holder True if player should be TNT holder
+     * @param isGlowingRound True if this is a glowing round (5 or 6), false otherwise
+     */
+    public void setTNTHolder(Player player, boolean holder, boolean isGlowingRound) {
         PlayerGameData data = getPlayerData(player);
         data.setTNTHolder(holder);
-        
+
         if (holder) {
             // Add TNT head
             player.getInventory().setHelmet(new ItemStack(Material.TNT));
-            
+
             // Add Speed II effect
             player.addPotionEffect(new PotionEffect(
-                PotionEffectType.SPEED, 
-                Integer.MAX_VALUE, 
+                PotionEffectType.SPEED,
+                Integer.MAX_VALUE,
                 1, // Speed II (level 2)
-                false, 
+                false,
                 false
             ));
-            
-            // Add glowing effect (red)
+
+            // Add glowing effect (TNT holders always glow)
             player.addPotionEffect(new PotionEffect(
                 PotionEffectType.GLOWING,
                 Integer.MAX_VALUE,
@@ -78,11 +89,11 @@ public class PlayerManager {
             ));
         } else {
             // Remove TNT head
-            if (player.getInventory().getHelmet() != null && 
+            if (player.getInventory().getHelmet() != null &&
                 player.getInventory().getHelmet().getType() == Material.TNT) {
                 player.getInventory().setHelmet(null);
             }
-            
+
             // Remove Speed II, add Speed I
             player.removePotionEffect(PotionEffectType.SPEED);
             player.addPotionEffect(new PotionEffect(
@@ -92,9 +103,12 @@ public class PlayerManager {
                 false,
                 false
             ));
-            
-            // Remove glowing if not in glowing round
-            // (This will be handled by round logic)
+
+            // IMPORTANT: Only remove glowing if NOT in a glowing round
+            // In rounds 5 and 6, all players should keep glowing even without TNT
+            if (!isGlowingRound) {
+                player.removePotionEffect(PotionEffectType.GLOWING);
+            }
         }
     }
     
@@ -115,15 +129,31 @@ public class PlayerManager {
      * Remove all game effects from a player
      */
     public void removeAllEffects(Player player) {
-        player.removePotionEffect(PotionEffectType.SPEED);
-        player.removePotionEffect(PotionEffectType.GLOWING);
-        player.removePotionEffect(PotionEffectType.REGENERATION);
-        player.removePotionEffect(PotionEffectType.BLINDNESS);
-        
-        // Remove TNT head
-        if (player.getInventory().getHelmet() != null && 
-            player.getInventory().getHelmet().getType() == Material.TNT) {
-            player.getInventory().setHelmet(null);
+        try {
+            // Check if player is online
+            if (!player.isOnline()) {
+                plugin.getLogger().warning("プレイヤーがオフラインのためエフェクトを削除できません: " + player.getName());
+                return;
+            }
+
+            // Remove all potion effects
+            player.removePotionEffect(PotionEffectType.SPEED);
+            player.removePotionEffect(PotionEffectType.GLOWING);
+            player.removePotionEffect(PotionEffectType.REGENERATION);
+            player.removePotionEffect(PotionEffectType.BLINDNESS);
+
+            // Remove TNT head (and any helmet)
+            // IMPORTANT: Always clear helmet regardless of type to ensure TNT is removed
+            if (player.getInventory().getHelmet() != null) {
+                ItemStack helmet = player.getInventory().getHelmet();
+                plugin.getLogger().info("ヘルメット削除: " + player.getName() + " (タイプ: " + helmet.getType() + ")");
+                player.getInventory().setHelmet(null);
+            }
+
+            plugin.getLogger().info("エフェクト削除完了: " + player.getName());
+        } catch (Exception e) {
+            plugin.getLogger().severe("エフェクト削除エラー: " + player.getName());
+            e.printStackTrace();
         }
     }
     

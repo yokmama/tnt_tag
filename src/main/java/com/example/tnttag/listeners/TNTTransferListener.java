@@ -101,14 +101,17 @@ public class TNTTransferListener implements Listener {
         attackerData.setTNTHolder(false);
         attackerData.setLastTagTime(System.currentTimeMillis());
         attackerData.incrementTntTagsGiven();
-        
+
         victimData.setTNTHolder(true);
         victimData.incrementTntTagsReceived();
-        
+
         // Update visual effects
-        plugin.getPlayerManager().setTNTHolder(attacker, false);
-        plugin.getPlayerManager().setTNTHolder(victim, true);
-        
+        // IMPORTANT: Check if this is a glowing round (5 or 6)
+        // In glowing rounds, all players keep glowing even without TNT
+        boolean isGlowingRound = round.getConfig().isGlowing();
+        plugin.getPlayerManager().setTNTHolder(attacker, false, isGlowingRound);
+        plugin.getPlayerManager().setTNTHolder(victim, true, isGlowingRound);
+
         // TODO: Play tag sound and effects
         // TODO: Send messages to players
     }

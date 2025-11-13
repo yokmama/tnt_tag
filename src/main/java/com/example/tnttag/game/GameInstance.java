@@ -37,6 +37,9 @@ public class GameInstance {
         this.players = new HashSet<>();
         this.state = GameState.WAITING;
         this.currentRound = 0;
+
+        // Setup world border immediately so players can't leave arena even during WAITING
+        arena.setupWorldBorder();
     }
     
     /**
@@ -153,8 +156,12 @@ public class GameInstance {
         plugin.getLogger().info("ゲーム開始: " + arena.getName() + " (プレイヤー: " + players.size() + "人)");
 
         try {
-            // Setup arena
-            arena.setupWorldBorder();
+            // World border is already set up in constructor
+
+            // Set world time to day and weather to clear
+            arena.getWorld().setTime(1000); // 1000 = morning (day time)
+            arena.getWorld().setStorm(false); // Stop rain
+            arena.getWorld().setThundering(false); // Stop thunder
 
             // Fire start event
             TNTTagStartEvent event = new TNTTagStartEvent(this);
@@ -489,16 +496,30 @@ public class GameInstance {
 
         // Remove effects and restore players
         for (Player player : playersCopy) {
-            // Remove HUD elements
-            plugin.getHUDManager().getScoreboardManager().removeScoreboard(player);
-            plugin.getHUDManager().getBossBarManager().hideBossBar(player);
+            try {
+                plugin.getLogger().info("プレイヤークリーンアップ開始: " + player.getName() + " (オンライン: " + player.isOnline() + ")");
 
-            // Remove effects and restore player state
-            plugin.getPlayerManager().removeAllEffects(player);
-            player.setGameMode(GameMode.SURVIVAL);
-            plugin.getPlayerManager().removePlayerData(player);
+                // Remove HUD elements
+                plugin.getHUDManager().getScoreboardManager().removeScoreboard(player);
+                plugin.getHUDManager().getBossBarManager().hideBossBar(player);
 
-            plugin.getLogger().info("プレイヤークリーンアップ完了: " + player.getName());
+                // Remove effects and restore player state
+                plugin.getPlayerManager().removeAllEffects(player);
+
+                // Restore game mode (only if player is online)
+                if (player.isOnline()) {
+                    player.setGameMode(GameMode.SURVIVAL);
+                }
+
+                // Remove player data
+                plugin.getPlayerManager().removePlayerData(player);
+
+                plugin.getLogger().info("プレイヤークリーンアップ完了: " + player.getName());
+            } catch (Exception e) {
+                plugin.getLogger().severe("プレイヤークリーンアップエラー: " + player.getName());
+                e.printStackTrace();
+                // Continue with other players even if one fails
+            }
         }
 
         // Clear all player references from GameManager

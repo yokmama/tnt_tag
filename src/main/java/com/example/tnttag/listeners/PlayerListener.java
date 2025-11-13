@@ -6,33 +6,100 @@ import com.example.tnttag.game.GameState;
 import com.example.tnttag.player.PlayerGameData;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
+import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
+import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
+
+import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
 
 /**
  * Handles general player events
  */
 public class PlayerListener implements Listener {
-    
+
     private final TNTTagPlugin plugin;
-    
+    // Store disconnected players' game info: UUID -> GameInstance
+    private final Map<UUID, GameInstance> disconnectedPlayers;
+
     public PlayerListener(TNTTagPlugin plugin) {
         this.plugin = plugin;
+        this.disconnectedPlayers = new HashMap<>();
     }
-    
+
     /**
-     * Handle player disconnect
+     * Handle player reconnect - restore to game if they disconnected during a game
+     */
+    @EventHandler
+    public void onPlayerJoin(PlayerJoinEvent event) {
+        Player player = event.getPlayer();
+        UUID uuid = player.getUniqueId();
+
+        // Check if this player was in a game before disconnecting
+        GameInstance game = disconnectedPlayers.remove(uuid);
+
+        if (game != null) {
+            // Check if the game is still running
+            if (game.getState() != GameState.ENDING) {
+                plugin.getLogger().info(player.getName() + " が再接続しました。ゲームに復帰させます。");
+
+                // Re-add player to the game
+                if (plugin.getGameManager().joinGame(player, game)) {
+                    // Get player's game data
+                    PlayerGameData data = plugin.getPlayerManager().getPlayerData(player);
+
+                    // Teleport to arena center
+                    player.teleport(game.getArena().getCenterSpawn());
+
+                    // Restore game state
+                    if (data.isAlive()) {
+                        player.setGameMode(GameMode.ADVENTURE);
+
+                        // Restore TNT holder status if applicable
+                        if (data.isTNTHolder()) {
+                            plugin.getPlayerManager().setTNTHolder(player, true);
+                        } else {
+                            // Give Speed I to non-TNT holders
+                            plugin.getPlayerManager().setTNTHolder(player, false);
+                        }
+
+                        player.sendMessage("§aゲームに復帰しました！");
+                    } else {
+                        // Player was eliminated before disconnect
+                        player.setGameMode(GameMode.SPECTATOR);
+                        player.sendMessage("§7観戦モードで復帰しました。");
+                    }
+                } else {
+                    player.sendMessage("§cゲームへの復帰に失敗しました。");
+                }
+            } else {
+                plugin.getLogger().info(player.getName() + " のゲームは既に終了していました。");
+            }
+        }
+    }
+
+    /**
+     * Handle player disconnect - store game info for potential rejoin
      */
     @EventHandler
     public void onPlayerQuit(PlayerQuitEvent event) {
-        GameInstance game = plugin.getGameManager().getPlayerGame(event.getPlayer());
-        
+        Player player = event.getPlayer();
+        GameInstance game = plugin.getGameManager().getPlayerGame(player);
+
         if (game != null) {
-            plugin.getGameManager().leaveGame(event.getPlayer());
+            // Store the game instance for rejoin
+            disconnectedPlayers.put(player.getUniqueId(), game);
+
+            plugin.getLogger().info(player.getName() + " が切断しました。ゲーム情報を保持します。");
+
+            // Remove from game manager but keep PlayerGameData
+            plugin.getGameManager().leaveGame(player);
         }
     }
     
@@ -87,52 +154,6 @@ public class PlayerListener implements Listener {
         }
     }
 
-    /**
-     * Handle arena boundary violations (TASK-194)
-     */
-    @EventHandler
-    public void onPlayerMove(PlayerMoveEvent event) {
-        // Only check if player actually moved (not just head rotation)
-        if (event.getFrom().getBlockX() == event.getTo().getBlockX() &&
-            event.getFrom().getBlockY() == event.getTo().getBlockY() &&
-            event.getFrom().getBlockZ() == event.getTo().getBlockZ()) {
-            return;
-        }
-
-        org.bukkit.entity.Player player = event.getPlayer();
-        GameInstance game = plugin.getGameManager().getPlayerGame(player);
-
-        // Only check boundary if player is in a game AND game is running
-        if (game == null) {
-            return;
-        }
-
-        GameState state = game.getState();
-        if (state != GameState.IN_GAME && state != GameState.ROUND_ENDING) {
-            return;
-        }
-
-        // Check if player is outside arena bounds (X and Z only, ignore Y)
-        Location to = event.getTo();
-        Location from = event.getFrom();
-
-        // Create 2D boundary check (ignore Y coordinate)
-        org.bukkit.util.BoundingBox bounds = game.getArena().getBoundingBox();
-
-        boolean outsideX = to.getX() < bounds.getMinX() || to.getX() > bounds.getMaxX();
-        boolean outsideZ = to.getZ() < bounds.getMinZ() || to.getZ() > bounds.getMaxZ();
-
-        if (outsideX || outsideZ) {
-            // Teleport back to previous position instead of canceling
-            event.setTo(from);
-            player.sendMessage("§c警告: アリーナ外に出ることはできません！");
-
-            if (plugin.getConfigManager().isDebug()) {
-                plugin.getLogger().info(player.getName() + " attempted to leave arena bounds: " +
-                    "X=" + to.getBlockX() + " Z=" + to.getBlockZ() +
-                    " (bounds: X=" + bounds.getMinX() + "~" + bounds.getMaxX() +
-                    " Z=" + bounds.getMinZ() + "~" + bounds.getMaxZ() + ")");
-            }
-        }
-    }
+    // NOTE: Arena boundary is now handled by WorldBorder (see Arena.setupWorldBorder)
+    // No need for manual PlayerMoveEvent checking - Minecraft handles it automatically
 }
