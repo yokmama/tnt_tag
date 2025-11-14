@@ -433,8 +433,8 @@ public class GameInstance {
             // Cleanup
             cleanup();
 
-            // Remove this game from GameManager
-            plugin.getGameManager().removeGameInstance(this);
+            // Remove this game from GameManager (single game instance)
+            plugin.getGameManager().removeSingleGameInstance();
 
             plugin.getLogger().info("ゲームクリーンアップ完了: " + arena.getName());
         } catch (Exception e) {
@@ -444,7 +444,7 @@ public class GameInstance {
             try {
                 cleanup();
                 // Remove this game from GameManager even on error
-                plugin.getGameManager().removeGameInstance(this);
+                plugin.getGameManager().removeSingleGameInstance();
             } catch (Exception ex) {
                 plugin.getLogger().severe("クリーンアップエラー: " + arena.getName());
                 ex.printStackTrace();

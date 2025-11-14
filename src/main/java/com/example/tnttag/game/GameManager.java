@@ -151,11 +151,18 @@ public class GameManager {
     /**
      * Remove a game instance after it has ended
      * Used by GameInstance.endGame() to clean up after game completion
+     * Note: For single game instance mode, use removeSingleGameInstance() instead
      */
     public void removeGameInstance(GameInstance game) {
-        String arenaName = game.getArena().getName();
-        games.remove(arenaName);
-        plugin.getLogger().info("ゲームインスタンスを削除しました: " + arenaName);
+        // Check if this is the single game instance
+        if (getSingleGameInstance() == game) {
+            removeSingleGameInstance();
+        } else {
+            // Legacy arena-based game (not used in single-game-instance mode)
+            String arenaName = game.getArena().getName();
+            games.remove(arenaName);
+            plugin.getLogger().info("ゲームインスタンスを削除しました: " + arenaName);
+        }
     }
     
     /**
