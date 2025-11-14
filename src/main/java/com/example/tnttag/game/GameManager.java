@@ -13,14 +13,12 @@ import java.util.*;
 public class GameManager {
 
     private final TNTTagPlugin plugin;
-    private final Map<String, GameInstance> games; // Arena name -> Game
-    private final Map<UUID, GameInstance> playerGames; // Player UUID -> Game
+    private final Map<String, GameInstance> games; // Arena name -> Game (or "single_game" key)
     private static final String SINGLE_GAME_KEY = "single_game";
 
     public GameManager(TNTTagPlugin plugin) {
         this.plugin = plugin;
         this.games = new HashMap<>();
-        this.playerGames = new HashMap<>();
     }
     
     /**
@@ -83,10 +81,6 @@ public class GameManager {
         GameInstance game = getSingleGameInstance();
         if (game != null) {
             games.remove(SINGLE_GAME_KEY);
-            // Remove all players from player games map
-            for (Player player : game.getPlayers()) {
-                playerGames.remove(player.getUniqueId());
-            }
             plugin.getLogger().info("シングルゲームインスタンスを削除しました");
         }
     }
@@ -106,65 +100,18 @@ public class GameManager {
     }
     
     /**
-     * Get the game a player is in
+     * Get the single game instance that a player is in
+     * All players on the server are in the game
      */
     public GameInstance getPlayerGame(Player player) {
-        return playerGames.get(player.getUniqueId());
+        return getSingleGameInstance();
     }
-    
+
     /**
-     * Check if a player is in a game
+     * Check if a player is in a game (always true if game exists)
      */
     public boolean isInGame(Player player) {
-        return playerGames.containsKey(player.getUniqueId());
-    }
-    
-    /**
-     * Add a player to a game
-     */
-    public boolean joinGame(Player player, GameInstance game) {
-        if (isInGame(player)) {
-            if (plugin.getConfigManager().isDebug()) {
-                plugin.getLogger().info(player.getName() + " は既にゲームに参加しています");
-            }
-            return false; // Already in a game
-        }
-
-        try {
-            if (game.addPlayer(player)) {
-                playerGames.put(player.getUniqueId(), game);
-                plugin.getLogger().info(player.getName() + " がゲームに参加しました: " + game.getArena().getName());
-                return true;
-            }
-        } catch (Exception e) {
-            plugin.getLogger().severe("プレイヤー参加エラー: " + player.getName());
-            e.printStackTrace();
-        }
-
-        return false;
-    }
-    
-    /**
-     * Remove a player from their game
-     */
-    public void leaveGame(Player player) {
-        GameInstance game = getPlayerGame(player);
-        if (game != null) {
-            try {
-                game.removePlayer(player);
-                playerGames.remove(player.getUniqueId());
-                plugin.getLogger().info(player.getName() + " がゲームから退出しました: " + game.getArena().getName());
-
-                // If game is empty and in waiting state, remove it
-                if (game.getPlayers().isEmpty() && game.getState() == GameState.WAITING) {
-                    plugin.getLogger().info("空のゲームを削除します: " + game.getArena().getName());
-                    removeGame(game);
-                }
-            } catch (Exception e) {
-                plugin.getLogger().severe("プレイヤー退出エラー: " + player.getName());
-                e.printStackTrace();
-            }
-        }
+        return getSingleGameInstance() != null;
     }
     
     /**
@@ -199,20 +146,6 @@ public class GameManager {
      */
     private void removeGame(GameInstance game) {
         games.remove(game.getArena().getName());
-
-        // Remove all players from player games map
-        for (Player player : game.getPlayers()) {
-            playerGames.remove(player.getUniqueId());
-        }
-    }
-
-    /**
-     * Clear all players from a game in the playerGames map
-     * Used during game cleanup to prevent "already in game" errors
-     */
-    public void clearPlayersFromGame(GameInstance game) {
-        // Remove all players that belong to this game
-        playerGames.entrySet().removeIf(entry -> entry.getValue() == game);
     }
 
     /**
@@ -253,7 +186,6 @@ public class GameManager {
         }
 
         games.clear();
-        playerGames.clear();
 
         plugin.getLogger().info("すべてのゲームを停止しました");
     }

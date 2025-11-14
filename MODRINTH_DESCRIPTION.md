@@ -136,7 +136,7 @@ Found a bug? Have a suggestion?
 
 ## 👨‍💻 Credits
 
-**Game Design:** Saito Yuuki (斉藤ゆうき)
+**Game Design:** Riku
 **Implementation:** TNT TAG Development Team
 
 ## 📜 License

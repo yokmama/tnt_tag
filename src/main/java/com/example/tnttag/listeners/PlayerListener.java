@@ -34,47 +34,14 @@ public class PlayerListener implements Listener {
     }
 
     /**
-     * Handle player join - reconnect to existing game or auto-join single game instance
+     * Handle player join - all players automatically participate in the game
      */
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent event) {
         Player player = event.getPlayer();
         UUID uuid = player.getUniqueId();
 
-        // Check if this player was in a game before disconnecting
-        GameInstance disconnectedGame = disconnectedPlayers.remove(uuid);
-
-        if (disconnectedGame != null) {
-            // Handle reconnection
-            if (disconnectedGame.getState() != GameState.ENDING) {
-                plugin.getLogger().info(player.getName() + " が再接続しました。ゲームに復帰させます。");
-
-                if (plugin.getGameManager().joinGame(player, disconnectedGame)) {
-                    PlayerGameData data = plugin.getPlayerManager().getPlayerData(player);
-                    player.teleport(disconnectedGame.getArena().getCenterSpawn());
-
-                    if (data.isAlive()) {
-                        player.setGameMode(GameMode.ADVENTURE);
-                        if (data.isTNTHolder()) {
-                            plugin.getPlayerManager().setTNTHolder(player, true);
-                        } else {
-                            plugin.getPlayerManager().setTNTHolder(player, false);
-                        }
-                        player.sendMessage("§aゲームに復帰しました！");
-                    } else {
-                        player.setGameMode(GameMode.SPECTATOR);
-                        player.sendMessage("§7観戦モードで復帰しました。");
-                    }
-                } else {
-                    player.sendMessage("§cゲームへの復帰に失敗しました。");
-                }
-            } else {
-                plugin.getLogger().info(player.getName() + " のゲームは既に終了していました。");
-            }
-            return; // Don't auto-join if reconnecting
-        }
-
-        // Auto-join: Get or create single game instance
+        // Get or create single game instance
         GameInstance game = plugin.getGameManager().getSingleGameInstance();
 
         if (game == null) {
@@ -96,51 +63,76 @@ public class PlayerListener implements Listener {
             }
         }
 
-        // Join game or become spectator based on game state
         GameState state = game.getState();
 
-        if (state == GameState.WAITING || state == GameState.STARTING) {
-            // Join as active player
-            if (plugin.getGameManager().joinGame(player, game)) {
-                player.sendMessage("§aアリーナ '" + game.getArena().getName() + "' に参加しました");
-                plugin.getLogger().info(player.getName() + " が自動参加しました");
+        // Check if player was disconnected during active game
+        PlayerGameData savedData = disconnectedPlayers.containsKey(uuid) ?
+            plugin.getPlayerManager().getPlayerData(player) : null;
+
+        if (savedData != null && state != GameState.WAITING && state != GameState.ENDING) {
+            // Reconnection - restore previous state
+            disconnectedPlayers.remove(uuid);
+            player.teleport(game.getArena().getCenterSpawn());
+
+            if (savedData.isAlive()) {
+                player.setGameMode(GameMode.ADVENTURE);
+                if (savedData.isTNTHolder()) {
+                    plugin.getPlayerManager().setTNTHolder(player, true);
+                } else {
+                    plugin.getPlayerManager().setTNTHolder(player, false);
+                }
+                player.sendMessage("§aゲームに復帰しました！");
             } else {
-                // Game is full - become spectator
                 player.setGameMode(GameMode.SPECTATOR);
-                Location spectatorLoc = game.getArena().getCenterSpawn();
-                player.teleport(spectatorLoc);
-
-                player.sendMessage("§7観戦モードでゲームに参加しました");
-                plugin.getLogger().info(player.getName() + " は満員のため観戦モードで参加しました");
+                player.sendMessage("§7観戦モードで復帰しました。");
             }
+            plugin.getLogger().info(player.getName() + " が再接続しました");
         } else {
-            // Game in progress - join as spectator
-            player.setGameMode(GameMode.SPECTATOR);
-            Location spectatorLoc = game.getArena().getCenterSpawn();
-            player.teleport(spectatorLoc);
+            // New join or game ended
+            disconnectedPlayers.remove(uuid);
 
-            player.sendMessage("§7観戦モードでゲームに参加しました");
-            plugin.getLogger().info(player.getName() + " がゲーム進行中のため観戦モードで参加しました");
+            if (state == GameState.WAITING || state == GameState.STARTING) {
+                // Initialize as active participant
+                PlayerGameData data = plugin.getPlayerManager().getPlayerData(player);
+                data.setAlive(true);
+                player.setGameMode(GameMode.ADVENTURE);
+                player.teleport(game.getArena().getCenterSpawn());
+                player.sendMessage("§aアリーナ '" + game.getArena().getName() + "' へようこそ");
+                plugin.getLogger().info(player.getName() + " がゲームに参加しました");
+
+                // Check if we should auto-start
+                game.checkAutoStart();
+            } else {
+                // Game in progress - join as spectator
+                PlayerGameData data = plugin.getPlayerManager().getPlayerData(player);
+                data.setAlive(false);
+                player.setGameMode(GameMode.SPECTATOR);
+                player.teleport(game.getArena().getCenterSpawn());
+                player.sendMessage("§7観戦モードでゲームに参加しました");
+                plugin.getLogger().info(player.getName() + " が観戦者として参加しました");
+            }
         }
     }
 
     /**
-     * Handle player disconnect - store game info for potential rejoin
+     * Handle player disconnect - store game state for potential rejoin
      */
     @EventHandler
     public void onPlayerQuit(PlayerQuitEvent event) {
         Player player = event.getPlayer();
-        GameInstance game = plugin.getGameManager().getPlayerGame(player);
+        GameInstance game = plugin.getGameManager().getSingleGameInstance();
 
-        if (game != null) {
-            // Store the game instance for rejoin
+        if (game != null && game.getState() != GameState.WAITING && game.getState() != GameState.ENDING) {
+            // Store UUID to indicate player was in active game
             disconnectedPlayers.put(player.getUniqueId(), game);
-
             plugin.getLogger().info(player.getName() + " が切断しました。ゲーム情報を保持します。");
-
-            // Remove from game manager but keep PlayerGameData
-            plugin.getGameManager().leaveGame(player);
         }
+
+        // Clean up HUD elements
+        plugin.getHUDManager().getScoreboardManager().removeScoreboard(player);
+        plugin.getHUDManager().getBossBarManager().hideBossBar(player);
+
+        // Note: PlayerGameData is kept for reconnection
     }
     
     /**

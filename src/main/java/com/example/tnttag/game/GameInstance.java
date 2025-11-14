@@ -23,18 +23,16 @@ public class GameInstance {
     private final UUID id;
     private final TNTTagPlugin plugin;
     private final Arena arena;
-    private final Set<Player> players;
     private GameState state;
     private int currentRound;
     private Round activeRound;
     private BukkitTask countdownTask;
     private BukkitTask gameTask;
-    
+
     public GameInstance(TNTTagPlugin plugin, Arena arena) {
         this.id = UUID.randomUUID();
         this.plugin = plugin;
         this.arena = arena;
-        this.players = new HashSet<>();
         this.state = GameState.WAITING;
         this.currentRound = 0;
 
@@ -57,17 +55,18 @@ public class GameInstance {
     }
     
     /**
-     * Get all players
+     * Get all players (all online players on the server)
      */
     public Set<Player> getPlayers() {
-        return new HashSet<>(players);
+        // All players on the server are participants in the game
+        return new HashSet<>(Bukkit.getOnlinePlayers());
     }
     
     /**
      * Get alive players
      */
     public Set<Player> getAlivePlayers() {
-        return players.stream()
+        return getPlayers().stream()
             .filter(p -> plugin.getPlayerManager().getPlayerData(p).isAlive())
             .collect(Collectors.toSet());
     }
@@ -94,52 +93,20 @@ public class GameInstance {
     }
     
     /**
-     * Add a player to the game
+     * Check if auto-start conditions are met
+     * Called periodically or when player count changes
      */
-    public boolean addPlayer(Player player) {
+    public void checkAutoStart() {
         if (state != GameState.WAITING) {
-            return false;
+            return;
         }
 
-        int maxPlayers = plugin.getConfigManager().getMaxPlayers();
-        if (players.size() >= maxPlayers) {
-            return false;
-        }
-
-        players.add(player);
-        plugin.getPlayerManager().getPlayerData(player); // Initialize data
-
-        // Auto-start logic: check if minimum player count is reached
+        int playerCount = Bukkit.getOnlinePlayers().size();
         int minPlayers = plugin.getConfigManager().getMinPlayers();
-        if (players.size() >= minPlayers) {
-            // Verify we're still in WAITING state (prevent race conditions)
-            if (state == GameState.WAITING) {
-                plugin.getLogger().info("最小プレイヤー数に達しました。ゲームを自動開始します (" + players.size() + "/" + maxPlayers + "人)");
-                start();
-            }
-        }
 
-        return true;
-    }
-    
-    /**
-     * Remove a player from the game
-     */
-    public void removePlayer(Player player) {
-        players.remove(player);
-
-        // Remove HUD elements
-        plugin.getHUDManager().getScoreboardManager().removeScoreboard(player);
-        plugin.getHUDManager().getBossBarManager().hideBossBar(player);
-
-        // Remove player data and effects
-        plugin.getPlayerManager().removePlayerData(player);
-        plugin.getPlayerManager().removeAllEffects(player);
-
-        // If player was TNT holder, redistribute TNT
-        if (activeRound != null && activeRound.isTNTHolder(player)) {
-            activeRound.removeTNTHolder(player);
-            redistributeTNT();
+        if (playerCount >= minPlayers) {
+            plugin.getLogger().info("最小プレイヤー数に達しました。ゲームを自動開始します (" + playerCount + "人)");
+            start();
         }
     }
     
@@ -153,7 +120,7 @@ public class GameInstance {
         }
 
         state = GameState.STARTING;
-        plugin.getLogger().info("ゲーム開始: " + arena.getName() + " (プレイヤー: " + players.size() + "人)");
+        plugin.getLogger().info("ゲーム開始: " + arena.getName() + " (プレイヤー: " + getPlayers().size() + "人)");
 
         try {
             // World border is already set up in constructor
@@ -189,53 +156,56 @@ public class GameInstance {
             public void run() {
                 // Check if player count dropped below minimum (countdown cancellation)
                 int minPlayers = plugin.getConfigManager().getMinPlayers();
-                if (players.size() < minPlayers) {
+                Set<Player> currentPlayers = getPlayers();
+                if (currentPlayers.size() < minPlayers) {
                     countdownTask.cancel();
                     state = GameState.WAITING;
 
                     // Notify remaining players
                     String message = plugin.getMessageManager().getMessageWithPrefix("errors.not_enough_players",
                         plugin.getMessageManager().createPlaceholders("min", String.valueOf(minPlayers)));
-                    for (Player player : players) {
+                    for (Player player : currentPlayers) {
                         player.sendMessage(message);
                     }
 
-                    plugin.getLogger().info("カウントダウンがキャンセルされました（人数不足: " + players.size() + "/" + minPlayers + "人）");
+                    plugin.getLogger().info("カウントダウンがキャンセルされました（人数不足: " + currentPlayers.size() + "/" + minPlayers + "人）");
                     return;
                 }
 
                 if (remaining <= 0) {
                     countdownTask.cancel();
 
+                    Set<Player> gamePlayers = getPlayers();
                     // Play game start effects
-                    for (Player player : players) {
+                    for (Player player : gamePlayers) {
                         plugin.getHUDManager().getTitleManager().sendGameStart(player);
                     }
-                    plugin.getEffectManager().playGameStartEffects(arena.getCenterSpawn(), players);
+                    plugin.getEffectManager().playGameStartEffects(arena.getCenterSpawn(), gamePlayers);
 
                     startFirstRound();
                     return;
                 }
 
+                Set<Player> gamePlayers = getPlayers();
                 // Update action bar for all players
-                for (Player player : players) {
+                for (Player player : gamePlayers) {
                     plugin.getHUDManager().getActionBarManager().sendCountdown(player, remaining);
                 }
 
                 // Play sounds based on remaining time
                 if (remaining >= 4 && remaining <= 10) {
                     // Tick sound (pitch 1.0) for 10-4 seconds
-                    for (Player player : players) {
+                    for (Player player : gamePlayers) {
                         player.playSound(player.getLocation(), org.bukkit.Sound.BLOCK_NOTE_BLOCK_PLING, 1.0f, 1.0f);
                     }
                 } else if (remaining >= 1 && remaining <= 3) {
                     // High-pitch sound (pitch 2.0) for 3-1 seconds
-                    for (Player player : players) {
+                    for (Player player : gamePlayers) {
                         player.playSound(player.getLocation(), org.bukkit.Sound.BLOCK_NOTE_BLOCK_PLING, 1.0f, 2.0f);
                     }
 
                     // Display title for 3, 2, 1
-                    for (Player player : players) {
+                    for (Player player : gamePlayers) {
                         plugin.getHUDManager().getTitleManager().sendCountdownTitle(player, remaining);
                     }
                 }
@@ -424,7 +394,7 @@ public class GameInstance {
             // Update statistics for all players
             StatsManager statsManager = plugin.getPlayerManager().getStatsManager();
 
-            for (Player player : players) {
+            for (Player player : getPlayers()) {
                 try {
                     PlayerGameData data = plugin.getPlayerManager().getPlayerData(player);
                     GameStatistics stats = statsManager.getStats(player);
@@ -486,13 +456,14 @@ public class GameInstance {
      * Cleanup game resources
      */
     private void cleanup() {
-        plugin.getLogger().info("クリーンアップ開始: " + arena.getName() + " (プレイヤー数: " + players.size() + ")");
+        Set<Player> currentPlayers = getPlayers();
+        plugin.getLogger().info("クリーンアップ開始: " + arena.getName() + " (プレイヤー数: " + currentPlayers.size() + ")");
 
         // Remove world border
         arena.removeWorldBorder();
 
         // Create a copy of players list to avoid ConcurrentModificationException
-        List<Player> playersCopy = new ArrayList<>(players);
+        List<Player> playersCopy = new ArrayList<>(currentPlayers);
 
         // Remove effects and restore players
         for (Player player : playersCopy) {
@@ -522,12 +493,7 @@ public class GameInstance {
             }
         }
 
-        // Clear all player references from GameManager
-        plugin.getGameManager().clearPlayersFromGame(this);
-        plugin.getLogger().info("GameManager.playerGamesマップをクリアしました");
-
         // Clear references
-        players.clear();
         activeRound = null;
 
         plugin.getLogger().info("全参照をクリアしました: " + arena.getName());

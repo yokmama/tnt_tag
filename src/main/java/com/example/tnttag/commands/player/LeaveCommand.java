@@ -21,15 +21,11 @@ public class LeaveCommand implements SubCommand {
         }
         
         Player player = (Player) sender;
-        
-        if (!plugin.getGameManager().isInGame(player)) {
-            plugin.getMessageManager().sendMessage(player, "commands.leave.not_in_game");
-            return true;
-        }
-        
-        plugin.getGameManager().leaveGame(player);
-        plugin.getMessageManager().sendMessage(player, "commands.leave.success");
-        
+
+        // Auto-join is now enabled - players cannot leave without disconnecting
+        player.sendMessage("§eサーバー接続中は常にゲームに参加しています。");
+        player.sendMessage("§7ゲームから退出するにはサーバーから切断してください。");
+
         return true;
     }
 }

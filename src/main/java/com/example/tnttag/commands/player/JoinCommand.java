@@ -57,16 +57,9 @@ public class JoinCommand implements SubCommand {
             game = plugin.getGameManager().createGame(arena);
         }
         
-        // Join game
-        if (plugin.getGameManager().joinGame(player, game)) {
-            plugin.getMessageManager().sendMessage(player, "commands.join.success",
-                MessageManager.createPlaceholders("arena", arenaName));
-            
-            // Teleport to arena waiting area
-            player.teleport(arena.getCenterSpawn());
-        } else {
-            plugin.getMessageManager().sendMessage(player, "commands.join.game_full");
-        }
+        // Auto-join is now enabled - players are automatically in the game
+        player.sendMessage("§eプレイヤーはサーバー接続時に自動的にゲームに参加しています。");
+        player.sendMessage("§7このコマンドは不要です。");
         
         return true;
     }

@@ -415,6 +415,8 @@ tnttag.bypass.cooldown  # クールダウン無視
 ## Active Technologies
 - Java 17 (for Minecraft 1.20.x compatibility) (001-tnt-tag-game)
 - YAML files (config.yml, arenas.yml, messages_ja_JP.yml, player stats) (001-tnt-tag-game)
+- Java 21, Kotlin 2.2.21 (混在プロジェクト) + Paper API 1.21.10-R0.1-SNAPSHOT (Minecraft server platform), Kotlin stdlib-jdk8 (003-auto-game-start)
+- YAML files (config.yml, arenas.yml, player stats) (003-auto-game-start)
 
 ## Recent Changes
 - 001-tnt-tag-game: Added Java 17 (for Minecraft 1.20.x compatibility)
