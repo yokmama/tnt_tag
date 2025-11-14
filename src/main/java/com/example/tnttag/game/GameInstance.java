@@ -9,6 +9,7 @@ import com.example.tnttag.stats.ResultsManager;
 import com.example.tnttag.stats.StatsManager;
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
+import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitTask;
 
@@ -122,7 +123,16 @@ public class GameInstance {
         plugin.getLogger().info("ゲーム開始: " + arena.getName() + " (プレイヤー: " + getPlayers().size() + "人)");
 
         try {
-            // Setup world border when game starts
+            // IMPORTANT: Teleport all players to arena center BEFORE setting world border
+            // This prevents players from being outside the border when it's created
+            Location centerSpawn = arena.getCenterSpawn();
+            for (Player player : getPlayers()) {
+                player.teleport(centerSpawn);
+                player.setGameMode(GameMode.ADVENTURE);
+            }
+            plugin.getLogger().info("全プレイヤーをアリーナ中央にテレポートしました");
+
+            // Setup world border AFTER teleporting players
             arena.setupWorldBorder();
 
             // Set world time to day and weather to clear
