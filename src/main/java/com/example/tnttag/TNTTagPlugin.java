@@ -57,19 +57,29 @@ public class TNTTagPlugin extends JavaPlugin {
             return;
         }
 
+        // Remove world borders from all arenas (cleanup from previous games)
+        for (com.example.tnttag.arena.Arena arena : arenaManager.getAllArenas()) {
+            try {
+                arena.removeWorldBorder();
+                getLogger().info("ワールドボーダーをリセット: " + arena.getName());
+            } catch (Exception e) {
+                getLogger().warning("ワールドボーダーのリセットに失敗: " + arena.getName());
+            }
+        }
+
         // Start HUD system
         hudManager.startAll();
-        
+
         // Register commands
         TNTTagCommandExecutor commandExecutor = new TNTTagCommandExecutor(this);
         getCommand("tnttag").setExecutor(commandExecutor);
         getCommand("tnttag").setTabCompleter(commandExecutor);
-        
+
         // Register event listeners
         getServer().getPluginManager().registerEvents(new PlayerListener(this), this);
         getServer().getPluginManager().registerEvents(new GameListener(this), this);
         getServer().getPluginManager().registerEvents(new TNTTransferListener(this), this);
-        
+
         getLogger().info("TNT TAG プラグインが有効化されました！");
     }
     
