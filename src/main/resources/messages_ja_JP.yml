@@ -73,7 +73,7 @@ commands:
     pos1_not_set: "&cPosition 1が設定されていません"
   creategame:
     success: "&aアリーナ '&e%name%&a' を作成しました！"
-    positions_not_set: "&c両方のpositionを設定してください"
+    positions_not_set: "&c両方のpositionを(setpos1, setpos2)設定してください"
     different_worlds: "&c両地点は同じワールドである必要があります"
     too_small: "&cアリーナが小さすぎます（最小: 10ブロック）"
     name_exists: "&cそのアリーナ名は既に使用されています"

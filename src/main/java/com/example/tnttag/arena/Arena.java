@@ -129,10 +129,26 @@ public class Arena {
     }
     
     /**
-     * Remove world border
+     * Remove world border (reset to very large size)
+     * Note: Minecraft worlds can only have one world border per world.
+     * We set it to a very large size to effectively disable it.
      */
     public void removeWorldBorder() {
         WorldBorder border = world.getWorldBorder();
-        border.reset();
+
+        // Reset to default spawn location (0, 0)
+        border.setCenter(0, 0);
+
+        // Set to maximum safe size (60,000,000 blocks - just under the world limit)
+        // This is effectively infinite for gameplay purposes
+        border.setSize(60000000.0);
+
+        // Remove warnings
+        border.setWarningDistance(0);
+        border.setWarningTime(0);
+
+        // Remove damage
+        border.setDamageAmount(0.0);
+        border.setDamageBuffer(0.0);
     }
 }
