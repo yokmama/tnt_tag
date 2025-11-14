@@ -11,6 +11,11 @@ game:
   eliminated: "&cあなたは爆発しました..."
   victory: "&6&l🏆 勝利！最後の生存者です！"
   spectating: "&7観戦モードになりました"
+  # Auto-game-start feature messages
+  spectator_joined: "&7観戦モードでゲームに参加しました"
+  spectator_left: "&7観戦モードを終了しました"
+  auto_start_max_players: "&a最大人数に達しました。ゲームを自動開始します..."
+  auto_start_countdown: "&eゲーム開始まで %seconds% 秒"
 
 hud:
   waiting: "&7ゲーム開始を待っています..."
@@ -82,6 +87,12 @@ commands:
     not_found: "&cアリーナが見つかりません: %name%"
     already_started: "&cゲームは既に開始しています"
     no_players: "&cプレイヤーがいません"
+    # Auto-game-start feature messages
+    map_not_found: "&cマップ '%map%' が見つかりません"
+    map_selected: "&aマップ '%map%' でゲームを開始します"
+    map_random_selected: "&aランダムに '%map%' が選択されました"
+    insufficient_players: "&c最小人数に達していません（現在: %current%人、必要: %min%人）"
+    game_in_progress: "&cゲームは既に進行中です"
   stop:
     success: "&aゲームを強制停止しました"
     not_found: "&cアリーナが見つかりません: %name%"

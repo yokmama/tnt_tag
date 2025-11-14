@@ -130,7 +130,32 @@ public class ArenaManager {
     public Arena getArena(String name) {
         return arenas.get(name);
     }
-    
+
+    /**
+     * Select a random arena from all registered arenas
+     * @return A randomly selected arena, or null if no arenas are registered
+     */
+    public Arena getRandomArena() {
+        Collection<Arena> allArenas = arenas.values();
+
+        if (allArenas.isEmpty()) {
+            plugin.getLogger().severe("ランダム選択用のアリーナがありません");
+            return null;
+        }
+
+        if (allArenas.size() == 1) {
+            return allArenas.iterator().next();
+        }
+
+        List<Arena> arenaList = new ArrayList<>(allArenas);
+        Random random = new Random();
+        int index = random.nextInt(arenaList.size());
+
+        Arena selected = arenaList.get(index);
+        plugin.getLogger().info("ランダムにアリーナを選択: " + selected.getName());
+        return selected;
+    }
+
     /**
      * Get all arenas
      */

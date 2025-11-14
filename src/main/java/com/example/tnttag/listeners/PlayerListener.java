@@ -34,7 +34,7 @@ public class PlayerListener implements Listener {
     }
 
     /**
-     * Handle player reconnect - restore to game if they disconnected during a game
+     * Handle player join - reconnect to existing game or auto-join single game instance
      */
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent event) {
@@ -42,36 +42,26 @@ public class PlayerListener implements Listener {
         UUID uuid = player.getUniqueId();
 
         // Check if this player was in a game before disconnecting
-        GameInstance game = disconnectedPlayers.remove(uuid);
+        GameInstance disconnectedGame = disconnectedPlayers.remove(uuid);
 
-        if (game != null) {
-            // Check if the game is still running
-            if (game.getState() != GameState.ENDING) {
+        if (disconnectedGame != null) {
+            // Handle reconnection
+            if (disconnectedGame.getState() != GameState.ENDING) {
                 plugin.getLogger().info(player.getName() + " が再接続しました。ゲームに復帰させます。");
 
-                // Re-add player to the game
-                if (plugin.getGameManager().joinGame(player, game)) {
-                    // Get player's game data
+                if (plugin.getGameManager().joinGame(player, disconnectedGame)) {
                     PlayerGameData data = plugin.getPlayerManager().getPlayerData(player);
+                    player.teleport(disconnectedGame.getArena().getCenterSpawn());
 
-                    // Teleport to arena center
-                    player.teleport(game.getArena().getCenterSpawn());
-
-                    // Restore game state
                     if (data.isAlive()) {
                         player.setGameMode(GameMode.ADVENTURE);
-
-                        // Restore TNT holder status if applicable
                         if (data.isTNTHolder()) {
                             plugin.getPlayerManager().setTNTHolder(player, true);
                         } else {
-                            // Give Speed I to non-TNT holders
                             plugin.getPlayerManager().setTNTHolder(player, false);
                         }
-
                         player.sendMessage("§aゲームに復帰しました！");
                     } else {
-                        // Player was eliminated before disconnect
                         player.setGameMode(GameMode.SPECTATOR);
                         player.sendMessage("§7観戦モードで復帰しました。");
                     }
@@ -81,6 +71,56 @@ public class PlayerListener implements Listener {
             } else {
                 plugin.getLogger().info(player.getName() + " のゲームは既に終了していました。");
             }
+            return; // Don't auto-join if reconnecting
+        }
+
+        // Auto-join: Get or create single game instance
+        GameInstance game = plugin.getGameManager().getSingleGameInstance();
+
+        if (game == null) {
+            // No game exists - create one with random arena
+            com.example.tnttag.arena.Arena arena = plugin.getArenaManager().getRandomArena();
+
+            if (arena == null) {
+                player.sendMessage("§cアリーナが設定されていません。管理者に連絡してください。");
+                plugin.getLogger().severe("アリーナが設定されていないため、ゲームを作成できません");
+                return;
+            }
+
+            game = plugin.getGameManager().createSingleGameInstance(arena);
+
+            if (game == null) {
+                player.sendMessage("§cゲームの作成に失敗しました。管理者に連絡してください。");
+                plugin.getLogger().severe("ゲームインスタンスの作成に失敗しました");
+                return;
+            }
+        }
+
+        // Join game or become spectator based on game state
+        GameState state = game.getState();
+
+        if (state == GameState.WAITING || state == GameState.STARTING) {
+            // Join as active player
+            if (plugin.getGameManager().joinGame(player, game)) {
+                player.sendMessage("§aアリーナ '" + game.getArena().getName() + "' に参加しました");
+                plugin.getLogger().info(player.getName() + " が自動参加しました");
+            } else {
+                // Game is full - become spectator
+                player.setGameMode(GameMode.SPECTATOR);
+                Location spectatorLoc = game.getArena().getCenterSpawn();
+                player.teleport(spectatorLoc);
+
+                player.sendMessage("§7観戦モードでゲームに参加しました");
+                plugin.getLogger().info(player.getName() + " は満員のため観戦モードで参加しました");
+            }
+        } else {
+            // Game in progress - join as spectator
+            player.setGameMode(GameMode.SPECTATOR);
+            Location spectatorLoc = game.getArena().getCenterSpawn();
+            player.teleport(spectatorLoc);
+
+            player.sendMessage("§7観戦モードでゲームに参加しました");
+            plugin.getLogger().info(player.getName() + " がゲーム進行中のため観戦モードで参加しました");
         }
     }
 

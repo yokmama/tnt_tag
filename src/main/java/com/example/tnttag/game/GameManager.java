@@ -11,11 +11,12 @@ import java.util.*;
  * Manages all active game instances
  */
 public class GameManager {
-    
+
     private final TNTTagPlugin plugin;
     private final Map<String, GameInstance> games; // Arena name -> Game
     private final Map<UUID, GameInstance> playerGames; // Player UUID -> Game
-    
+    private static final String SINGLE_GAME_KEY = "single_game";
+
     public GameManager(TNTTagPlugin plugin) {
         this.plugin = plugin;
         this.games = new HashMap<>();
@@ -42,7 +43,54 @@ public class GameManager {
             return null;
         }
     }
-    
+
+    /**
+     * Get the server's single game instance
+     * @return The single game instance, or null if no game exists
+     */
+    public GameInstance getSingleGameInstance() {
+        return games.get(SINGLE_GAME_KEY);
+    }
+
+    /**
+     * Create the server's single game instance
+     * @param arena The arena/map for the game
+     * @return The newly created game instance, or existing instance if already created
+     */
+    public GameInstance createSingleGameInstance(Arena arena) {
+        GameInstance existingGame = getSingleGameInstance();
+        if (existingGame != null) {
+            plugin.getLogger().warning("シングルゲームインスタンスは既に存在しています");
+            return existingGame; // Idempotent
+        }
+
+        try {
+            GameInstance game = new GameInstance(plugin, arena);
+            games.put(SINGLE_GAME_KEY, game);
+            plugin.getLogger().info("シングルゲームインスタンスを作成しました: " + arena.getName());
+            return game;
+        } catch (Exception e) {
+            plugin.getLogger().severe("シングルゲームインスタンス作成エラー: " + arena.getName());
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    /**
+     * Remove the server's single game instance
+     */
+    public void removeSingleGameInstance() {
+        GameInstance game = getSingleGameInstance();
+        if (game != null) {
+            games.remove(SINGLE_GAME_KEY);
+            // Remove all players from player games map
+            for (Player player : game.getPlayers()) {
+                playerGames.remove(player.getUniqueId());
+            }
+            plugin.getLogger().info("シングルゲームインスタンスを削除しました");
+        }
+    }
+
     /**
      * Get a game by arena name
      */
