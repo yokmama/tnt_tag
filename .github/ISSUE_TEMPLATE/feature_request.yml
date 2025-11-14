@@ -1,0 +1,182 @@
+name: Feature Request
+description: TNT TAGプラグインへの新機能提案
+title: "[Feature] "
+labels: ["enhancement"]
+assignees: []
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        TNT TAGプラグインへの機能提案をありがとうございます。
+        より良いプラグインにするため、以下の情報をご提供ください。
+
+  - type: textarea
+    id: feature-description
+    attributes:
+      label: 機能の概要
+      description: どのような機能を追加してほしいですか？
+      placeholder: 提案する機能について簡潔に説明してください
+    validations:
+      required: true
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: 解決したい課題
+      description: この機能が解決する問題や改善する点は何ですか？
+      placeholder: 現在どのような不便さや課題がありますか？
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposed-solution
+    attributes:
+      label: 提案する解決策
+      description: この機能がどのように動作すべきか、詳しく説明してください
+      placeholder: |
+        例：
+        - コマンド `/tnttag powerup <type>` を追加
+        - ラウンド中にランダムでパワーアップアイテムが出現
+        - スピードブースト、無敵時間などの効果
+    validations:
+      required: true
+
+  - type: dropdown
+    id: category
+    attributes:
+      label: 機能カテゴリ
+      description: この機能はどのカテゴリに該当しますか？
+      options:
+        - ゲームプレイ（新しいゲームメカニクス）
+        - UI/UX（表示、操作性の改善）
+        - コマンド（新しいコマンド、既存コマンドの拡張）
+        - 設定・カスタマイズ（config.ymlの新オプション）
+        - パフォーマンス（動作速度、軽量化）
+        - アリーナ（マップ関連機能）
+        - 統計・ランキング（記録、スコア関連）
+        - エフェクト・演出（パーティクル、サウンド）
+        - その他
+    validations:
+      required: true
+
+  - type: dropdown
+    id: priority
+    attributes:
+      label: 優先度
+      description: この機能の重要度はどのくらいですか？
+      options:
+        - High（ゲーム体験に大きく影響する重要な機能）
+        - Medium（あると便利だが必須ではない）
+        - Low（あったら嬉しい程度）
+    validations:
+      required: true
+
+  - type: textarea
+    id: use-case
+    attributes:
+      label: 使用例・シナリオ
+      description: この機能を実際にどのように使いますか？
+      placeholder: |
+        例：
+        1. 管理者が `/tnttag powerup enable` でパワーアップ機能を有効化
+        2. ラウンド3から30秒ごとにランダムな場所にパワーアップが出現
+        3. プレイヤーが取得すると5秒間スピードブーストが発動
+        4. ゲームの戦略性が向上し、より面白くなる
+    validations:
+      required: false
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: 代替案
+      description: 他に考えられる解決方法はありますか？
+      placeholder: この機能以外で同じ課題を解決できる方法があれば記載してください
+    validations:
+      required: false
+
+  - type: textarea
+    id: examples
+    attributes:
+      label: 参考例
+      description: 他のプラグインやゲームで似た機能があれば教えてください
+      placeholder: |
+        例：
+        - Hypixelの○○モードにある機能
+        - ××プラグインの□□機能
+        - 参考URL: https://...
+    validations:
+      required: false
+
+  - type: dropdown
+    id: compatibility
+    attributes:
+      label: 既存機能との互換性
+      description: この機能は既存のゲームモードと共存できますか？
+      options:
+        - 既存機能に影響しない（オプション機能として追加）
+        - 既存機能の拡張（現在の動作を改善）
+        - 既存機能の変更が必要（破壊的変更の可能性）
+        - わからない
+    validations:
+      required: true
+
+  - type: dropdown
+    id: config
+    attributes:
+      label: 設定の必要性
+      description: この機能にカスタマイズ可能な設定は必要ですか？
+      options:
+        - 必要（config.ymlに設定項目が必要）
+        - 不要（固定の動作で問題ない）
+        - どちらでも良い
+    validations:
+      required: true
+
+  - type: textarea
+    id: config-example
+    attributes:
+      label: 設定例
+      description: 必要な設定項目があれば、config.ymlの記述例を提案してください
+      placeholder: |
+        ```yaml
+        powerups:
+          enabled: true
+          spawn_interval: 30
+          types:
+            - SPEED_BOOST
+            - INVISIBILITY
+            - JUMP_BOOST
+        ```
+      render: yaml
+
+  - type: textarea
+    id: implementation-notes
+    attributes:
+      label: 実装に関する補足
+      description: 技術的な実装のアイデアや注意点があれば記載してください
+      placeholder: |
+        例：
+        - Paper APIの○○機能を使用
+        - パフォーマンスへの影響が懸念されるため、××の最適化が必要
+        - バージョン1.20以降でのみ動作する機能
+
+  - type: textarea
+    id: additional
+    attributes:
+      label: 追加情報
+      description: その他、機能提案に関する情報があれば記載してください
+      placeholder: スクリーンショット、図解、参考資料など
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: 確認事項
+      description: 以下を確認してください
+      options:
+        - label: 既存のissueに同じ機能提案がないことを確認しました
+          required: true
+        - label: この機能がTNT TAGのコンセプトに合っていると思います
+          required: true
+        - label: 実装可能性について考慮しました
+          required: false
