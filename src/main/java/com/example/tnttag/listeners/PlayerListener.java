@@ -92,9 +92,14 @@ public class PlayerListener implements Listener {
             disconnectedPlayers.remove(uuid);
 
             if (state == GameState.WAITING || state == GameState.STARTING) {
-                // Initialize as active participant
+                // Initialize as active participant - clear any previous data
+                plugin.getPlayerManager().removePlayerData(player);
+                plugin.getPlayerManager().removeAllEffects(player);
+
                 PlayerGameData data = plugin.getPlayerManager().getPlayerData(player);
                 data.setAlive(true);
+                data.setTNTHolder(false);
+
                 player.setGameMode(GameMode.ADVENTURE);
                 player.teleport(game.getArena().getCenterSpawn());
                 player.sendMessage("§aアリーナ '" + game.getArena().getName() + "' へようこそ");
@@ -104,8 +109,13 @@ public class PlayerListener implements Listener {
                 game.checkAutoStart();
             } else {
                 // Game in progress - join as spectator
+                plugin.getPlayerManager().removePlayerData(player);
+                plugin.getPlayerManager().removeAllEffects(player);
+
                 PlayerGameData data = plugin.getPlayerManager().getPlayerData(player);
                 data.setAlive(false);
+                data.setTNTHolder(false);
+
                 player.setGameMode(GameMode.SPECTATOR);
                 player.teleport(game.getArena().getCenterSpawn());
                 player.sendMessage("§7観戦モードでゲームに参加しました");

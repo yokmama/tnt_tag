@@ -36,8 +36,7 @@ public class GameInstance {
         this.state = GameState.WAITING;
         this.currentRound = 0;
 
-        // Setup world border immediately so players can't leave arena even during WAITING
-        arena.setupWorldBorder();
+        // World border will be set up when game starts, not during WAITING
     }
     
     /**
@@ -123,7 +122,8 @@ public class GameInstance {
         plugin.getLogger().info("ゲーム開始: " + arena.getName() + " (プレイヤー: " + getPlayers().size() + "人)");
 
         try {
-            // World border is already set up in constructor
+            // Setup world border when game starts
+            arena.setupWorldBorder();
 
             // Set world time to day and weather to clear
             arena.getWorld().setTime(1000); // 1000 = morning (day time)
