@@ -24,8 +24,6 @@ public class TNTTagCommandExecutor implements CommandExecutor, TabCompleter {
         this.subCommands = new HashMap<>();
         
         // Register player commands
-        subCommands.put("join", new JoinCommand(plugin));
-        subCommands.put("leave", new LeaveCommand(plugin));
         subCommands.put("list", new ListCommand(plugin));
         subCommands.put("stats", new StatsCommand(plugin));
         
@@ -43,7 +41,7 @@ public class TNTTagCommandExecutor implements CommandExecutor, TabCompleter {
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         if (args.length == 0) {
             sender.sendMessage("§c使用方法: /tnttag <subcommand>");
-            sender.sendMessage("§7利用可能なコマンド: join, leave, list, stats");
+            sender.sendMessage("§7利用可能なコマンド: list, stats");
             if (sender.isOp()) {
                 sender.sendMessage("§7管理者コマンド: setpos1, setpos2, creategame, delete, start, stop, reload");
             }
@@ -68,13 +66,11 @@ public class TNTTagCommandExecutor implements CommandExecutor, TabCompleter {
     public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
         if (args.length == 1) {
             List<String> completions = new ArrayList<>();
-            
+
             // Player commands
-            completions.add("join");
-            completions.add("leave");
             completions.add("list");
             completions.add("stats");
-            
+
             // Admin commands (OP only)
             if (sender.isOp()) {
                 completions.add("setpos1");
@@ -85,11 +81,11 @@ public class TNTTagCommandExecutor implements CommandExecutor, TabCompleter {
                 completions.add("stop");
                 completions.add("reload");
             }
-            
+
             // Filter by input
             String input = args[0].toLowerCase();
             completions.removeIf(s -> !s.startsWith(input));
-            
+
             return completions;
         }
         
