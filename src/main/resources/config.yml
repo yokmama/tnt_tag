@@ -8,8 +8,8 @@ database:
   type: YAML  # YAML, SQLite, MySQL (future)
 
 game:
-  min_players: 2      # Minimum players required to start game (auto-game-start feature)
-  max_players: 20     # Maximum players - auto-start when reached (changed from 25)
+  min_players: 2      # Minimum players required to manually start game
+  max_players: 25     # Maximum players - auto-start when reached
   rounds: 6
   countdown: 10
   tag_cooldown: 0.5

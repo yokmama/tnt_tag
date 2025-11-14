@@ -94,7 +94,7 @@ public class GameInstance {
     
     /**
      * Check if auto-start conditions are met
-     * Called periodically or when player count changes
+     * Auto-starts when max_players is reached
      */
     public void checkAutoStart() {
         if (state != GameState.WAITING) {
@@ -102,10 +102,10 @@ public class GameInstance {
         }
 
         int playerCount = Bukkit.getOnlinePlayers().size();
-        int minPlayers = plugin.getConfigManager().getMinPlayers();
+        int maxPlayers = plugin.getConfigManager().getMaxPlayers();
 
-        if (playerCount >= minPlayers) {
-            plugin.getLogger().info("最小プレイヤー数に達しました。ゲームを自動開始します (" + playerCount + "人)");
+        if (playerCount >= maxPlayers) {
+            plugin.getLogger().info("最大プレイヤー数に達しました。ゲームを自動開始します (" + playerCount + "人)");
             start();
         }
     }
