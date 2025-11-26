@@ -128,4 +128,20 @@ public class MessageManager {
     public String getPrefix() {
         return prefix;
     }
+
+    /**
+     * Get a list of messages by key
+     */
+    public java.util.List<String> getMessageList(String key) {
+        java.util.List<String> list = messages.getStringList(key);
+        if (list == null || list.isEmpty()) {
+            plugin.getLogger().warning("メッセージリストが見つかりません: " + key);
+            return java.util.Collections.emptyList();
+        }
+        java.util.List<String> colorized = new java.util.ArrayList<>();
+        for (String s : list) {
+            colorized.add(colorize(s));
+        }
+        return colorized;
+    }
 }

@@ -230,6 +230,26 @@ public class ConfigManager {
         return config.getDouble("game.tag_return_prevention.duration", 3.0);
     }
 
+    // TNT Item settings
+    /**
+     * Check if TNT item display is enabled
+     */
+    public boolean isTNTItemEnabled() {
+        return config.getBoolean("game.tnt_item.enabled", true);
+    }
+
+    /**
+     * Get the hotbar slot for TNT item (0-8)
+     */
+    public int getTNTItemSlot() {
+        int slot = config.getInt("game.tnt_item.slot", 0);
+        // Validate slot is in valid range (0-8 for hotbar)
+        if (slot < 0 || slot > 8) {
+            return 0;
+        }
+        return slot;
+    }
+
     /**
      * Get the underlying FileConfiguration
      */

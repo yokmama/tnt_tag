@@ -103,6 +103,12 @@ commands:
 tag:
   return_prevented: "&c&lタッチ返し防止中！他のプレイヤーを探せ！"
 
+tnt_item:
+  display_name: "&c&l爆弾を持っている！"
+  lore:
+    - "&7他のプレイヤーにタッチして"
+    - "&7爆弾を渡せ！"
+
 errors:
   not_enough_players: "&cプレイヤーが不足しています（最小: %min%人）"
   arena_not_found: "&cアリーナが見つかりません"
