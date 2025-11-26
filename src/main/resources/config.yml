@@ -15,6 +15,9 @@ game:
   tag_cooldown: 0.5
   explosion_countdown: 3
   pvp_enabled: false
+  tag_return_prevention:
+    enabled: true     # タッチ返し防止機能の有効/無効
+    duration: 3.0     # タッチ返し防止時間（秒）
 
 round_settings:
   round_1:

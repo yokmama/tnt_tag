@@ -3,6 +3,7 @@ package com.example.tnttag;
 import com.example.tnttag.config.ConfigManager;
 import com.example.tnttag.config.MessageManager;
 import com.example.tnttag.game.GameManager;
+import com.example.tnttag.game.TagReturnPreventionManager;
 import com.example.tnttag.player.PlayerManager;
 import com.example.tnttag.arena.ArenaManager;
 import com.example.tnttag.hud.HUDManager;
@@ -29,6 +30,7 @@ public class TNTTagPlugin extends JavaPlugin {
     private ConfigManager configManager;
     private MessageManager messageManager;
     private GameManager gameManager;
+    private TagReturnPreventionManager tagReturnPreventionManager;
     private PlayerManager playerManager;
     private ArenaManager arenaManager;
     private HUDManager hudManager;
@@ -47,6 +49,7 @@ public class TNTTagPlugin extends JavaPlugin {
             this.arenaManager = new ArenaManager(this);
             this.playerManager = new PlayerManager(this);
             this.gameManager = new GameManager(this);
+            this.tagReturnPreventionManager = new TagReturnPreventionManager(this);
             this.hudManager = new HUDManager(this);
             this.effectManager = new EffectManager(this);
 
@@ -165,5 +168,12 @@ public class TNTTagPlugin extends JavaPlugin {
      */
     public EffectManager getEffectManager() {
         return effectManager;
+    }
+
+    /**
+     * Get TagReturnPreventionManager
+     */
+    public TagReturnPreventionManager getTagReturnPreventionManager() {
+        return tagReturnPreventionManager;
     }
 }
