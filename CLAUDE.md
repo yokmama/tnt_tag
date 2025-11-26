@@ -417,6 +417,12 @@ tnttag.bypass.cooldown  # クールダウン無視
 - YAML files (config.yml, arenas.yml, messages_ja_JP.yml, player stats) (001-tnt-tag-game)
 - Java 21, Kotlin 2.2.21 (混在プロジェクト) + Paper API 1.21.10-R0.1-SNAPSHOT (Minecraft server platform), Kotlin stdlib-jdk8 (003-auto-game-start)
 - YAML files (config.yml, arenas.yml, player stats) (003-auto-game-start)
+- Kotlin 2.2.21 / Java 21 + Paper API 1.21.10-R0.1-SNAPSHOT, kotlin-stdlib-jdk8 (004-tag-return-prevention)
+- YAML (config.yml, messages_ja_JP.yml) (004-tag-return-prevention)
+- Java 21 + Kotlin 2.2.21（混在プロジェクト、メイン実装はJava） + Paper API 1.21.10-R0.1-SNAPSHOT, Kotlin stdlib-jdk8 (005-tnt-holder-item)
+- YAML files (config.yml, player stats) (005-tnt-holder-item)
+- Java 21 + Paper API 1.21.5-R0.1-SNAPSHOT + Paper API (Bukkit BossBar API) (006-hide-bossbar-timer)
+- N/A（この機能はランタイムのみ） (006-hide-bossbar-timer)
 
 ## Recent Changes
 - 001-tnt-tag-game: Added Java 17 (for Minecraft 1.20.x compatibility)
