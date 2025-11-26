@@ -80,7 +80,14 @@ public class TNTTransferListener implements Listener {
         if (attackerData.isOnCooldown(cooldown)) {
             return; // On cooldown
         }
-        
+
+        // Check tag return prevention
+        if (plugin.getTagReturnPreventionManager().isPreventionActive(
+                attacker.getUniqueId(), victim.getUniqueId())) {
+            plugin.getTagReturnPreventionManager().showPreventionFeedback(attacker);
+            return; // Tag return is prevented
+        }
+
         // Fire TNT tag event
         TNTTagEvent tagEvent = new TNTTagEvent(
             attacker, 
@@ -96,7 +103,11 @@ public class TNTTransferListener implements Listener {
         
         // Transfer TNT
         round.transferTNT(attacker, victim);
-        
+
+        // Add tag return prevention (victim cannot tag back to attacker)
+        plugin.getTagReturnPreventionManager().addPrevention(
+                victim.getUniqueId(), attacker.getUniqueId());
+
         // Update player data
         attackerData.setTNTHolder(false);
         attackerData.setLastTagTime(System.currentTimeMillis());

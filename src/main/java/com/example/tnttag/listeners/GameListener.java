@@ -43,6 +43,9 @@ public class GameListener implements Listener {
             event.getTntHolders().size() + " TNT保持者"
         );
 
+        // Clear tag return prevention states for new round
+        plugin.getTagReturnPreventionManager().clearAll();
+
         // Send round start title to all players
         TitleManager titleManager = plugin.getHUDManager().getTitleManager();
         for (Player player : event.getGame().getPlayers()) {
@@ -111,6 +114,9 @@ public class GameListener implements Listener {
         plugin.getLogger().info(
             "ゲーム終了: 勝者 = " + winnerName + ", 理由 = " + event.getEndReason()
         );
+
+        // Clear tag return prevention states
+        plugin.getTagReturnPreventionManager().clearAll();
 
         // Send victory title to winner
         if (event.getWinner() != null) {

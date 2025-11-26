@@ -214,7 +214,22 @@ public class ConfigManager {
     public boolean isDebug() {
         return config.getBoolean("plugin.debug", false);
     }
-    
+
+    // Tag return prevention settings
+    /**
+     * Check if tag return prevention is enabled
+     */
+    public boolean isTagReturnPreventionEnabled() {
+        return config.getBoolean("game.tag_return_prevention.enabled", true);
+    }
+
+    /**
+     * Get tag return prevention duration in seconds
+     */
+    public double getTagReturnPreventionDuration() {
+        return config.getDouble("game.tag_return_prevention.duration", 3.0);
+    }
+
     /**
      * Get the underlying FileConfiguration
      */
