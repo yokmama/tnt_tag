@@ -70,6 +70,9 @@ public class PlayerManager {
             // Add TNT head
             player.getInventory().setHelmet(new ItemStack(Material.TNT));
 
+            // Add TNT item to hotbar
+            plugin.getTNTItemManager().giveTNTItem(player);
+
             // Add Speed II effect
             player.addPotionEffect(new PotionEffect(
                 PotionEffectType.SPEED,
@@ -93,6 +96,9 @@ public class PlayerManager {
                 player.getInventory().getHelmet().getType() == Material.TNT) {
                 player.getInventory().setHelmet(null);
             }
+
+            // Remove TNT item from hotbar
+            plugin.getTNTItemManager().removeTNTItem(player);
 
             // Remove Speed II, add Speed I
             player.removePotionEffect(PotionEffectType.SPEED);

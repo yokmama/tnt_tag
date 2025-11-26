@@ -118,6 +118,9 @@ public class GameListener implements Listener {
         // Clear tag return prevention states
         plugin.getTagReturnPreventionManager().clearAll();
 
+        // Clear TNT items from all players
+        plugin.getTNTItemManager().clearAll();
+
         // Send victory title to winner
         if (event.getWinner() != null) {
             TitleManager titleManager = plugin.getHUDManager().getTitleManager();

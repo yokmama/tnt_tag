@@ -96,6 +96,9 @@ public class PlayerListener implements Listener {
                 plugin.getPlayerManager().removePlayerData(player);
                 plugin.getPlayerManager().removeAllEffects(player);
 
+                // Clean up any leftover TNT items from previous sessions
+                plugin.getTNTItemManager().removePlayer(player);
+
                 PlayerGameData data = plugin.getPlayerManager().getPlayerData(player);
                 data.setAlive(true);
                 data.setTNTHolder(false);
@@ -111,6 +114,9 @@ public class PlayerListener implements Listener {
                 // Game in progress - join as spectator
                 plugin.getPlayerManager().removePlayerData(player);
                 plugin.getPlayerManager().removeAllEffects(player);
+
+                // Clean up any leftover TNT items from previous sessions
+                plugin.getTNTItemManager().removePlayer(player);
 
                 PlayerGameData data = plugin.getPlayerManager().getPlayerData(player);
                 data.setAlive(false);
@@ -141,6 +147,9 @@ public class PlayerListener implements Listener {
         // Clean up HUD elements
         plugin.getHUDManager().getScoreboardManager().removeScoreboard(player);
         plugin.getHUDManager().getBossBarManager().hideBossBar(player);
+
+        // Remove TNT item if player has one
+        plugin.getTNTItemManager().removePlayer(player);
 
         // Note: PlayerGameData is kept for reconnection
     }

@@ -18,6 +18,9 @@ game:
   tag_return_prevention:
     enabled: true     # タッチ返し防止機能の有効/無効
     duration: 3.0     # タッチ返し防止時間（秒）
+  tnt_item:
+    enabled: true     # TNTアイテム表示機能の有効/無効
+    slot: 0           # ホットバースロット（0-8）
 
 round_settings:
   round_1:

@@ -4,6 +4,7 @@ import com.example.tnttag.config.ConfigManager;
 import com.example.tnttag.config.MessageManager;
 import com.example.tnttag.game.GameManager;
 import com.example.tnttag.game.TagReturnPreventionManager;
+import com.example.tnttag.game.TNTItemManager;
 import com.example.tnttag.player.PlayerManager;
 import com.example.tnttag.arena.ArenaManager;
 import com.example.tnttag.hud.HUDManager;
@@ -12,6 +13,7 @@ import com.example.tnttag.commands.TNTTagCommandExecutor;
 import com.example.tnttag.listeners.PlayerListener;
 import com.example.tnttag.listeners.GameListener;
 import com.example.tnttag.listeners.TNTTransferListener;
+import com.example.tnttag.listeners.TNTItemListener;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.logging.Level;
@@ -31,6 +33,7 @@ public class TNTTagPlugin extends JavaPlugin {
     private MessageManager messageManager;
     private GameManager gameManager;
     private TagReturnPreventionManager tagReturnPreventionManager;
+    private TNTItemManager tntItemManager;
     private PlayerManager playerManager;
     private ArenaManager arenaManager;
     private HUDManager hudManager;
@@ -50,6 +53,7 @@ public class TNTTagPlugin extends JavaPlugin {
             this.playerManager = new PlayerManager(this);
             this.gameManager = new GameManager(this);
             this.tagReturnPreventionManager = new TagReturnPreventionManager(this);
+            this.tntItemManager = new TNTItemManager(this);
             this.hudManager = new HUDManager(this);
             this.effectManager = new EffectManager(this);
 
@@ -70,6 +74,11 @@ public class TNTTagPlugin extends JavaPlugin {
             }
         }
 
+        // Clean up any leftover TNT items from all online players
+        for (org.bukkit.entity.Player player : getServer().getOnlinePlayers()) {
+            tntItemManager.removePlayer(player);
+        }
+
         // Start HUD system
         hudManager.startAll();
 
@@ -82,6 +91,7 @@ public class TNTTagPlugin extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new PlayerListener(this), this);
         getServer().getPluginManager().registerEvents(new GameListener(this), this);
         getServer().getPluginManager().registerEvents(new TNTTransferListener(this), this);
+        getServer().getPluginManager().registerEvents(new TNTItemListener(this), this);
 
         getLogger().info("TNT TAG プラグインが有効化されました！");
     }
@@ -175,5 +185,12 @@ public class TNTTagPlugin extends JavaPlugin {
      */
     public TagReturnPreventionManager getTagReturnPreventionManager() {
         return tagReturnPreventionManager;
+    }
+
+    /**
+     * Get TNTItemManager
+     */
+    public TNTItemManager getTNTItemManager() {
+        return tntItemManager;
     }
 }
