@@ -13,9 +13,18 @@ import org.bukkit.scheduler.BukkitTask;
 
 /**
  * Manages action bar display for players
+ *
+ * Updated: Hide remaining time from TNT holders when below threshold
+ * to prevent last-second tag strategies.
  */
 public class ActionBarManager {
-    
+
+    /**
+     * Threshold in seconds below which remaining time is hidden from TNT holders.
+     * This should match BossBarManager.BOSSBAR_HIDE_THRESHOLD.
+     */
+    private static final int TIME_HIDE_THRESHOLD = 10;
+
     private final TNTTagPlugin plugin;
     private BukkitTask updateTask;
     
@@ -87,23 +96,34 @@ public class ActionBarManager {
 
             if (round != null) {
                 int remainingTime = round.getRemainingTime();
+                boolean belowThreshold = remainingTime < TIME_HIDE_THRESHOLD;
 
                 if (!data.isAlive()) {
-                    // Spectating
-                    message = "§7観戦中 | §e生存者: " + game.getAlivePlayers().size() + "人";
+                    // Spectating - always show time (spectators can't influence the game)
+                    message = "§7観戦中 | §a残り: " + remainingTime + "秒 §7| §e生存者: " + game.getAlivePlayers().size() + "人";
 
                 } else if (data.isTNTHolder()) {
-                    // TNT holder
+                    // TNT holder - hide time when below threshold
                     if (remainingTime <= 3) {
-                        // Explosion countdown
+                        // Explosion countdown (final warning - always show)
                         message = "§4💥 爆発まで " + remainingTime + "... 💥";
+                    } else if (belowThreshold) {
+                        // Below threshold - hide exact time to prevent last-second strategies
+                        message = "§c⚠ TNTを持っています！急いでタッチ！⚠";
                     } else {
-                        message = "§c⚠ TNTを持っています！他の人にタッチ！⚠";
+                        // Above threshold - show time
+                        message = "§c⚠ TNTを持っています！残り: " + remainingTime + "秒 ⚠";
                     }
 
                 } else {
-                    // Normal player
-                    message = "§a残り時間: " + remainingTime + "秒 §7| §e生存者: " + game.getAlivePlayers().size() + "人";
+                    // Normal player (non-holder)
+                    if (belowThreshold) {
+                        // Below threshold - hide time so TNT holders can't ask others
+                        message = "§a逃げろ！ §7| §e生存者: " + game.getAlivePlayers().size() + "人";
+                    } else {
+                        // Above threshold - show time
+                        message = "§a残り時間: " + remainingTime + "秒 §7| §e生存者: " + game.getAlivePlayers().size() + "人";
+                    }
                 }
             }
         }
