@@ -423,6 +423,7 @@ tnttag.bypass.cooldown  # クールダウン無視
 - YAML files (config.yml, player stats) (005-tnt-holder-item)
 - Java 21 + Paper API 1.21.5-R0.1-SNAPSHOT + Paper API (Bukkit BossBar API) (006-hide-bossbar-timer)
 - N/A（この機能はランタイムのみ） (006-hide-bossbar-timer)
+- N/A（この機能では永続化不要） (007-game-start-heal)
 
 ## Recent Changes
 - 001-tnt-tag-game: Added Java 17 (for Minecraft 1.20.x compatibility)
