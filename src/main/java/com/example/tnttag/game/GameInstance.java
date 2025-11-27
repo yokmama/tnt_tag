@@ -10,7 +10,9 @@ import com.example.tnttag.stats.StatsManager;
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
+import org.bukkit.attribute.Attribute;
 import org.bukkit.entity.Player;
+import org.bukkit.potion.PotionEffect;
 import org.bukkit.scheduler.BukkitTask;
 
 import java.util.*;
@@ -270,6 +272,28 @@ public class GameInstance {
                 for (Player player : alivePlayers) {
                     player.teleport(arena.getCenterSpawn());
                 }
+            }
+
+            // Heal all players at game start (Round 1 only)
+            // This ensures fair conditions for all players regardless of pre-game damage
+            if (currentRound == 1) {
+                for (Player player : alivePlayers) {
+                    // US1: Health recovery - restore to max health
+                    player.setHealth(player.getAttribute(Attribute.MAX_HEALTH).getValue());
+
+                    // US2: Food and saturation recovery - restore to max
+                    player.setFoodLevel(20);
+                    player.setSaturation(20.0f);
+
+                    // US3: Clear all potion effects
+                    for (PotionEffect effect : player.getActivePotionEffects()) {
+                        player.removePotionEffect(effect.getType());
+                    }
+
+                    // US3: Extinguish fire
+                    player.setFireTicks(0);
+                }
+                plugin.getLogger().info("全プレイヤーを全回復しました");
             }
 
             // Apply effects
